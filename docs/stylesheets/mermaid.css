@@ -12,6 +12,28 @@
   margin: 0 auto;
 }
 
+.md-typeset .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.2rem 0 1.6rem;
+}
+
+.md-typeset details.imagegen-figure {
+  margin: 1rem 0 1.4rem;
+}
+
+.md-typeset details.imagegen-figure > summary {
+  font-weight: 600;
+}
+
+.md-typeset details.imagegen-figure img {
+  display: block;
+  max-width: 100%;
+  margin: 1rem auto 0.5rem;
+  border-radius: 0.35rem;
+}
+
 @media screen and (max-width: 768px) {
   .md-typeset .mermaid {
     margin-left: -0.2rem;

@@ -60,9 +60,15 @@ asset_target: docs/assets/04-session-routing-imagegen.png
 status: generated
 -->
 
+<details class="imagegen-figure" markdown="1">
+<summary>配图：展开查看 imagegen2 视觉概览</summary>
+
 ![Session Routing 路由键](../../assets/04-session-routing-imagegen.png)
 
 这张图把本章的主线放在中间那枚 `sessionKey` 上：左边是真实通信关系，右边是 OpenClaw 的 session store、transcript 和 agent run。后文会沿着这枚键解释连续性和隔离性。
+
+</details>
+
 
 ## 源码锚点
 
@@ -91,12 +97,14 @@ status: generated
 
 这些函数共同说明：`sessionKey` 不是随便起的字符串。它把 agent identity 和外部关系压成一个可存储、可查找、可复用的键。
 
-例如 DM scope 不同，key 的形态也不同：
+例如 DM scope 不同，同一条 Telegram DM 会落到不同的上下文边界：
 
-- `main`：直接回到 agent 的 main session；
-- `per-peer`：按发送者隔离；
-- `per-channel-peer`：按渠道 + 发送者隔离；
-- `per-account-channel-peer`：按账号 + 渠道 + 发送者隔离。
+| 场景 | dmScope | sessionKey 直觉 | 后果 |
+|---|---|---|---|
+| 单用户默认 | `main` | 直接进入 agent main session | 简单，但多用户场景容易串上下文 |
+| 多用户 DM | `per-peer` | 按发送者隔离 | 不同联系人不共享对话历史 |
+| 多渠道同人 | `per-channel-peer` | 渠道 + 发送者一起参与 key | Telegram 和 Slack 不会混成同一条 session |
+| 多账号多渠道 | `per-account-channel-peer` | 账号 + 渠道 + 发送者一起参与 key | 适合同一平台多个 bot/account 的隔离 |
 
 这就是 OpenClaw 的 session routing 会同时影响体验和安全的原因：同一个人跨渠道要不要共享上下文，多个人给同一个 agent 发消息要不要隔离，都在这里落地。
 
@@ -145,9 +153,10 @@ OpenClaw 的 session 文档还区分了几个时间字段：
 
 下一篇会继续往下走：session 选好了，OpenClaw 还需要一个长期生活空间来放规则、身份、记忆、heartbeat 清单、会话痕迹和自动化状态。这个空间就是 workspace。
 
-## Readability-coach 自检
+## 本章检查点
 
-- 是否回答了读者问题：是，围绕真实消息如何进入 agent 上下文展开。
-- 是否降低术语密度：是，`sessionKey`、session store、transcript 都先用中文解释作用，再展开源码位置。
-- 是否保留源码锚点：是，保留 `session-key.ts`、session paths、Gateway session key 相关锚点。
-- 是否避免无关项目叙事：是，只用 Claude Code / coding agent 做读者迁移背景。
+读完这一章，你应该能：
+
+- 能说明 sessionKey 如何同时决定连续性和隔离性。
+- 能用一个真实渠道消息理解 main / peer / channel-peer 等 session scope 的差异。
+- 能解释为什么真实世界消息不能简单塞进一条全局对话历史。

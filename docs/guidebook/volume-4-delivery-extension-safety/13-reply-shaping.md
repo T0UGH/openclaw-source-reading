@@ -68,9 +68,15 @@ asset_target: docs/assets/13-reply-shaping-imagegen.png
 status: generated
 -->
 
+<details class="imagegen-figure" markdown="1">
+<summary>配图：展开查看 imagegen2 视觉概览</summary>
+
 ![13｜Reply Shaping：从模型输出到渠道消息](../../assets/13-reply-shaping-imagegen.png)
 
 图片把核心路径压成三段：Agent Loop 产出混合事件，Reply Shaping 判断哪些内容可见、可发、该发到哪里，Outbound / Channel 再把它翻译成平台消息。下面几节只沿着这条边界展开，不做源码目录游览。
+
+</details>
+
 
 ## Agent loop 里的输出不是一种东西
 
@@ -149,13 +155,14 @@ Reply Shaping 不应该知道每个渠道的所有细节。它负责形成通用
 
 这也引出下一篇 Plugin / Channel：OpenClaw 的扩展点不是让每个插件各自发明一套 reply pipeline。core 先提供共享 message tool、payload plan、target/session 语义，再让 channel plugin 接管平台细节。
 
-## Readability-coach 自检
+## 本章检查点
 
-- **一句话问题是否回答了？** 是。模型输出不能直接等于聊天消息，因为真实渠道需要静默、去重、媒体、reply-to、interactive、delivery route 和错误 fallback。
-- **有没有把 Reply Shaping 写成 Markdown 美化？** 没有。本文强调运行时边界和 outbound payload plan。
-- **有没有源码锚定？** 有。引用 agent-loop、payloads、reply-policy、session-delivery、plugin-sdk reply payload 等。
-- **有没有接住前后文？** 有。前接 Background Tasks 的 completion delivery，后接 Plugin / Channel。
-- **有没有避免无关项目叙事？** 有。
+读完这一章，你应该能：
+
+- 能把 Reply Shaping 拆成可见性、形态、位置三个问题。
+- 能解释模型输出为什么不能直接等于聊天渠道里的最终消息。
+- 能理解 NO_REPLY、reply-to、duplicate suppression、fallback delivery 分别解决什么。
+
 
 ## Takeaway
 

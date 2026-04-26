@@ -74,7 +74,12 @@ asset_target: docs/assets/10-cron-imagegen.png
 status: generated
 -->
 
+<details class="imagegen-figure" markdown="1">
+<summary>配图：展开查看 imagegen2 视觉概览</summary>
+
 ![10｜Cron：Gateway 内建调度、隔离执行与结果投递](../../assets/10-cron-imagegen.png)
+
+</details>
 
 ## Cron 为什么必须在 Gateway 里
 
@@ -184,13 +189,14 @@ Cron 的输出有三种 delivery mode：
 
 工具 schema 里显式暴露了 schedule、payload、delivery、sessionTarget、failureAlert 等字段，说明 Agent 创建 cron job 时必须把“时间、执行方式、输出方式、失败处理”都结构化下来。
 
-## Readability-coach 自检
+## 本章检查点
 
-- **一句话问题是否回答了？** 是。Cron 是精确调度和承诺执行，Heartbeat 是周期醒来和低频检查。
-- **有没有把 Cron 写成系统 crontab？** 没有。文中强调它运行在 Gateway，并连接 session、task、delivery。
-- **有没有说明隔离执行？** 有。解释了 main / isolated / current / custom session。
-- **有没有说明结果投递？** 有。解释了 announce / webhook / none 和去重投递。
-- **有没有避免无关项目叙事？** 有。
+读完这一章，你应该能：
+
+- 能解释 Cron 是精确时间承诺，而不是系统 crontab 的薄包装。
+- 能区分 job definition、scheduler state、execution record / run log 和 delivery。
+- 能理解 main / isolated / current / custom session 对定时任务的影响。
+
 
 ## Takeaway
 

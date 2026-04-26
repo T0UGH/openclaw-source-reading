@@ -12,11 +12,11 @@ source_files:
 
 # 02｜Event Sources：OpenClaw 的 Agent Run 从哪里来
 
-读 coding agent 时，我们默认一次运行来自用户 prompt：人说一句，agent 开始做事。这个模型很直观，但在 OpenClaw 里不够用。
+从这一篇开始，不再反复证明 OpenClaw “不只是 prompt-response agent”。前两篇已经完成概念迁移；这里直接进入运行时问题：**一次 Agent Run 到底由什么触发？**
 
-OpenClaw 的 Agent Run 可以来自聊天消息，也可以来自 heartbeat tick、cron schedule、webhook、后台任务、节点事件或控制面请求。用户 prompt 只是事件来源之一，不是全部。
+OpenClaw 的 Agent Run 可以来自聊天消息，也可以来自 heartbeat tick、cron schedule、webhook、后台任务、节点事件或控制面请求。不同来源不只是入口不同，还会影响后续 session、execution context、task record 和 delivery。
 
-> OpenClaw 是 event-driven。理解事件来源，才知道后面的 Gateway、Session Routing、Delivery 为什么要这样设计。
+> Event Source 不是“prompt 的别名”。它是 OpenClaw 判断这次运行属于谁、在哪里执行、是否记录、最后投递到哪里的第一块上下文。
 
 ## 这篇先回答什么
 
@@ -76,9 +76,15 @@ asset_target: docs/assets/02-event-sources-imagegen.png
 status: generated
 -->
 
+<details class="imagegen-figure" markdown="1">
+<summary>配图：展开查看 imagegen2 视觉概览</summary>
+
 ![02｜OpenClaw Event Sources 总图](../../assets/02-event-sources-imagegen.png)
 
 这张图之后，后文会刻意先分来源、再讲进入后的处理。这样可以避免把 heartbeat、cron、webhook 都误读成“另一种 prompt”。
+
+</details>
+
 
 ## 源码锚点
 
@@ -86,6 +92,16 @@ status: generated
 - `~/workspace/openclaw/docs/automation/index.md`
 - `~/workspace/openclaw/docs/gateway/heartbeat.md`
 - `~/workspace/openclaw/docs/automation/cron-jobs.md`
+
+| 来源 | 通常进入哪里 | 是否偏向记录 | 投递后果 |
+|---|---|---|---|
+| 用户/渠道消息 | routed main session 或 peer session | 记录 transcript | 回到原渠道、原联系人或线程 |
+| Heartbeat tick | main session 或轻量/隔离上下文 | 不创建 task record | 没事静默，有事提醒 |
+| Cron schedule | main / isolated / current / custom session | 创建 execution record / run log | announce、webhook 或不投递 |
+| Webhook / Hooks | 取决于 hook 定义和 gateway route | 取决于是否触发后台工作 | 可能投递，也可能只更新状态 |
+| 控制面请求 | Gateway control-plane API | 通常是状态/操作记录 | 返回给控制端，不一定进入聊天渠道 |
+
+这张表比“有哪些来源”更重要：同样叫 event，后面进入的 session、是否留 task 账本、是否需要 delivery 都可能不同。
 
 ## 第一类：人发来的消息
 
@@ -145,9 +161,10 @@ Automation 文档把 Hooks、Tasks、Task Flow、Standing Orders 都放进自动
 
 下一篇进入 Gateway。Gateway 要解决的不是“怎么包一层 API”，而是“这些来源不同、身份不同、投递目标不同的事件，如何先进入一个统一的运行边界”。
 
-## Readability-coach 自检
+## 本章检查点
 
-- 是否回答了读者问题：是，开头先从读者容易带入的旧心智模型进入，再给出本章判断。
-- 是否降低术语密度：是，第一次出现的运行时概念都尽量配了中文解释，没有把英文术语当作入口。
-- 是否保留源码锚点：是，锚点集中列出，正文只引用必要机制，不做目录游览。
-- 是否避免无关项目叙事：是，只使用 Claude Code / coding agent 作为读者迁移背景，没有引入无关项目关系。
+读完这一章，你应该能：
+
+- 能列出 OpenClaw 的主要 event sources，并知道它们不都等价于用户 prompt。
+- 能理解不同事件来源会影响 session、execution context 和 delivery。
+- 能把 Heartbeat、Cron、Webhook、control-plane request 放到同一张事件入口地图里。

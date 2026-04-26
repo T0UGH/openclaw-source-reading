@@ -74,9 +74,15 @@ asset_target: docs/assets/14-plugin-channel-imagegen.png
 status: generated
 -->
 
+<details class="imagegen-figure" markdown="1">
+<summary>配图：展开查看 imagegen2 视觉概览</summary>
+
 ![14｜Plugin 与 Channel：OpenClaw 的世界入口扩展层](../../assets/14-plugin-channel-imagegen.png)
 
 图片里的 Channel plugin 被放在中间，不是因为它比 provider、media、hook 更“高级”，而是因为它最能暴露 OpenClaw 与普通 extension 的差别：真实渠道既是事件入口，也是会话边界、权限边界和结果出口。下面只围绕这条差别看 plugin / channel 的职责。
+
+</details>
+
 
 ## Capability model：插件注册的是 runtime 能力，不只是工具
 
@@ -197,13 +203,14 @@ OpenClaw plugin 要回答的问题更多：
 
 这就是运行时插件和工具扩展的区别。
 
-## Readability-coach 自检
+## 本章检查点
 
-- **一句话问题是否回答了？** 是。OpenClaw plugin 是运行时能力平面，Channel plugin 是真实世界入口/出口，不只是工具函数。
-- **有没有把 plugin 写成工具列表？** 没有。重点放在 capability model、load pipeline、shared message tool、session grammar、security。
-- **有没有和 Reply Shaping 接上？** 有。明确 payload shaping 与 channel execution 的边界。
-- **有没有源码锚定？** 有。引用 plugin architecture、channel plugin docs、loader/runtime/public surface/message/outbound 等锚点。
-- **有没有避免无关项目叙事？** 有。
+读完这一章，你应该能：
+
+- 能解释 Plugin 是能力所有权边界，Channel plugin 是真实世界入口/出口边界。
+- 能区分 core 的 shared message tool host 和 channel plugin 的平台适配职责。
+- 能理解 manifest、pairing、session grammar、outbound media 为什么属于 runtime capability plane。
+
 
 ## Takeaway
 

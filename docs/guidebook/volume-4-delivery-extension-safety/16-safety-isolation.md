@@ -17,43 +17,53 @@ OpenClaw 的安全边界为什么比 CLI coding agent 更复杂？
 
 ## 本篇先给结论
 
-OpenClaw 的安全不是单点权限开关，而是一组横跨 ingress、身份、session、workspace、memory、tool/runtime、node、plugin、delivery 的运行时边界。CLI agent 默认把“当前终端用户”视为操作者；OpenClaw 默认面对“外部事件进入一个长期运行的个人 AI runtime”。因此，安全要从消息入口开始，不能等到 `exec` 前才开始。
+OpenClaw 的安全不是单点权限开关，而是一组横跨 ingress、control plane、runtime plane、reply shaping、channel delivery 的闭环边界。CLI agent 默认把“当前终端用户”视为操作者；OpenClaw 默认面对“外部事件进入一个长期运行的个人 AI runtime”。因此，安全要从消息入口开始，不能等到 `exec` 前才开始。
+
+如果把第 13～16 章收成一条线，它应该是：**Ingress → Control Plane → Runtime Plane → Reply Shaping → Channel Delivery → Safety closure**。第 13 章说明“模型输出还不是可投递消息”；第 14 章说明“插件/渠道拥有自己的能力边界”；第 15 章说明“控制面决定、运行面执行”；本章则把这些边界重新闭合成安全问题：入口是否可信，状态是否串线，执行是否越权，出口是否投错。
 
 ## 先看一张机制图
 
 ```mermaid
 flowchart LR
-  Ingress[真实世界入口
-channel / webhook / UI / node / cron] --> Auth[Gateway Auth
-shared secret / proxy / pairing]
-  Auth --> Scope[Operator Scope
-read / write / admin / approvals / pairing]
-  Scope --> Routing[Session / Agent Routing]
-  Routing --> State[Workspace / Memory / Sessions]
-  State --> Runtime[Tools / Plugins / Node / Sandbox]
-  Runtime --> Approval[Exec / Plugin Approval]
-  Approval --> Delivery[Outbound Delivery
-channel / thread / requester]
+  Ingress[Ingress
+channel / webhook / UI / node / cron] --> Control[Control Plane
+auth / scopes / session routing / approvals]
+  Control --> Runtime[Runtime Plane
+workspace / memory / tools / plugins / sandbox / node]
+  Runtime --> Shaping[Reply Shaping
+intent / media / fallback / no-reply]
+  Shaping --> Delivery[Channel Delivery
+account / thread / requester / adapter]
+  Delivery --> Closure[Safety Closure
+audit / redaction / least privilege / traceability]
+  Closure -.收紧策略.-> Ingress
 
-  Routing -.隔离错误.-> Leak[上下文串线风险]
-  Runtime -.越权错误.-> Blast[宿主机与外部服务风险]
-  Delivery -.路由错误.-> Misdeliver[投递到错误对象]
+  Ingress -.入口事故.-> EntryRisk[伪造来源 / 过宽 webhook / 未配对节点]
+  Runtime -.状态事故.-> StateRisk[session 串线 / memory 污染 / workspace 越界]
+  Runtime -.执行事故.-> ExecRisk[host 命令 / 插件能力 / sandbox 逃逸]
+  Delivery -.出口事故.-> ExitRisk[错误线程 / 错误账号 / media 泄露]
 ```
 
-这张图想表达的不是“哪一层最安全”。重点在于，每一层都在缩小后续层的风险半径。安全从消息进入 Gateway 的那一刻就开始了；只在最后一层拦命令，已经太晚。
+这张图想表达的不是“哪一层最安全”。重点在于，13～16 章共同描述的是一个闭环：入口把外部事件带进系统，控制面决定它属于谁、能做什么，运行面真正接触状态和工具，reply shaping 把运行结果变成渠道语义，channel delivery 决定最终落点，最后安全审计再把 footgun 显性化并反馈到入口和策略。安全从消息进入 Gateway 的那一刻就开始了；只在最后一层拦命令，已经太晚。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 16｜安全与隔离：当 Agent 暴露给真实消息渠道之后 机制图
 type: boundary-map
 purpose: 用一张正式技术架构图解释“OpenClaw 的安全边界为什么比 CLI coding agent 更复杂？”
-prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw 源码阅读第 16 篇：安全与隔离。图中从左到右展示 Ingress、Gateway Auth、Operator Scope、Session Routing、Workspace/Memory、Tools/Plugins/Node/Sandbox、Approval、Delivery 八层边界，并用细红色虚线标出上下文串线、越权执行、错误投递三个风险点。高对比、无 logo、无水印，不要装饰性插画。
+prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw 源码阅读第 16 篇：安全与隔离。图中从左到右展示 Ingress、Control Plane、Runtime Plane、Reply Shaping、Channel Delivery、Safety Closure 六段闭环，并用细红色虚线标出入口事故、状态事故、执行事故、出口事故四类风险点。高对比、无 logo、无水印，不要装饰性插画。
 asset_target: docs/assets/16-safety-isolation-imagegen.png
 status: generated
 -->
 
+<details class="imagegen-figure" markdown="1">
+<summary>配图：展开查看 imagegen2 视觉概览</summary>
+
 ![16｜安全与隔离：当 Agent 暴露给真实消息渠道之后 机制图](../../assets/16-safety-isolation-imagegen.png)
 
-图片把安全路径画成入口到出口的闭环。下面不是逐个列安全模块，而是沿着同一个问题推进：一个外部事件进入长期运行的个人 AI runtime 后，系统如何确认它是谁、属于哪个 session、能触发什么、会污染哪些状态、最后应该投递到哪里。
+图片把第 13～16 章画成入口到出口、再由审计反馈到策略的闭环。下面不是逐个列安全模块，而是沿着同一个问题推进：一个外部事件进入长期运行的个人 AI runtime 后，系统如何确认它是谁、属于哪个 session、能触发什么、会污染哪些状态、如何被 shaping 成渠道消息、最后应该投递到哪里。
+
+</details>
+
 
 ## 源码锚点
 
@@ -68,6 +78,21 @@ status: generated
 - `~/workspace/openclaw/src/gateway/server-methods/exec-approval.ts`
 - `~/workspace/openclaw/src/node-host/invoke-system-run-plan.ts`
 - `~/workspace/openclaw/src/plugins/public-surface-loader.ts`
+
+## 四类事故：用风险闭环读安全，而不是安全模块巡礼
+
+为了避免把本章读成“Gateway、session、sandbox、plugin、delivery 的模块巡礼”，先把风险压成四类事故。每一类事故都对应闭环上的一个断点：
+
+| 风险分类 | 闭环位置 | 典型失败 | 为什么会连锁 |
+| --- | --- | --- | --- |
+| 入口事故 | Ingress → Control Plane | 伪造 webhook、过宽 shared secret、未配对节点、开放群组误触发 | 错误事件一旦进入系统，后续 session、tool、delivery 都会把它当成真实请求处理 |
+| 状态事故 | Control Plane → Runtime Plane | DM session 共享、webhook session override 过宽、memory flush 写入不该共享的信息、workspace 选错 | 长期 runtime 会记住错误上下文，事故不止影响这一次回复 |
+| 执行事故 | Runtime Plane | sandbox 关闭、elevated tool 越权、node host command 过宽、插件能力边界不清 | 运行面接触文件系统、进程、外部服务和设备节点，爆炸半径最大 |
+| 出口事故 | Reply Shaping → Channel Delivery | 私聊内容发到群里、后台任务结果落到默认渠道、media payload 绕过渠道规则、no-reply 失效 | 即使入口和执行都正确，错误投递也会把内部状态泄露给错误对象 |
+
+一个具体场景可以把四类事故串起来：Alice 在客户群里让 Agent “整理昨天私聊里那份报价，并发一版 PDF”。如果 Gateway 把群消息当成可信私聊请求，这是入口事故；如果默认共享 DM session 让群请求读到了 Alice 私聊 transcript，这是状态事故；如果生成 PDF 时需要在 node host 上执行脚本，而 approval / allowlist 没有绑定 cwd、argv、env 和具体脚本文件，这是执行事故；如果最后 reply shaping 丢掉 requester origin，把 PDF 发回客户群而不是 Alice 私聊，这是出口事故。
+
+这四类事故不是四个互不相关的检查项，而是同一条请求链上的连续故障。OpenClaw 的 safety closure 要做的，是让每一段都带着上一段的身份、scope、session、workspace、approval 和 delivery origin 继续往下走；任何一段丢失这些上下文，都可能把“小配置错误”放大成真实泄露。
 
 ## 1. Gateway 是入口边界，不只是转发器
 
@@ -186,15 +211,24 @@ OpenClaw 还要处理更现实的情况：有些命令必须在 gateway host 或
 
 这类检查背后的判断是：OpenClaw 默认是个人助手 trust model。如果你要把它放进多人、开放群组、公共 webhook 或远程节点环境，就必须主动收紧边界。
 
-## 小结
+## Takeaway
 
 本章保留一句话：**OpenClaw 的安全从 ingress 开始，到 delivery 结束；exec approval 只是其中一环。**
 
+最终闭环模型可以这样记：
+
+1. **Ingress** 决定外部事件能不能进来，防的是入口事故。
+2. **Control Plane** 决定它是谁、属于哪个 agent/session、拥有什么 scope，防的是状态事故的起点。
+3. **Runtime Plane** 接触 workspace、memory、tool、plugin、node 和 sandbox，防的是状态污染与执行事故。
+4. **Reply Shaping → Channel Delivery** 把结果变成渠道可投递消息并送回正确对象，防的是出口事故。
+5. **Safety closure** 通过 audit、least privilege、redaction、approval record 和策略收紧，把事故经验反馈回入口、状态、执行和出口边界。
+
 当 Agent 暴露给真实消息渠道之后，安全不再是“这条 shell 命令能不能跑”，而是“这个外部事件是否被正确认证、正确归属、正确隔离、正确限制、正确执行、正确投递”。这也是整本小书最后要留下的 runtime 视角：OpenClaw 的复杂性不是因为目录多，而是因为它把 Agent 放进了一个会长期存在、会醒来、会记忆、会跨渠道行动的现实环境。安全边界讲清楚，前面所有 delivery、plugin、control plane 的设计才不会只是架构分层，而会变成可运行的个人 AI runtime 保护网。
 
-## Readability-coach 自检
+## 本章检查点
 
-- 是否回答了读者问题：是，明确说明 OpenClaw 的安全边界从入口、身份、session、状态、runtime、approval 延伸到投递。
-- 是否有源码锚点：有，覆盖 Gateway 架构、session、sandbox、exec approvals、security audit、method scopes、auth secret、approval handler、public surface loader。
-- 是否避免无关项目叙事：是，没有引入无关项目关系，也没有把 OpenClaw 写成单一 coding agent 平替。
-- 是否保留一句话 takeaway：有，安全从 ingress 开始，到 delivery 结束，exec approval 只是其中一环。
+读完这一章，你应该能：
+
+- 能用入口事故、状态事故、执行事故、出口事故四类风险理解 OpenClaw safety。
+- 能解释安全为什么从 Gateway 入口开始，而不是等到 exec approval 才开始。
+- 能把 Reply Shaping、Plugin、Control/Runtime Plane 和 Delivery 收进同一条安全闭环。

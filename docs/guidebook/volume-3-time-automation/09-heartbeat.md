@@ -72,7 +72,12 @@ asset_target: docs/assets/09-heartbeat-imagegen.png
 status: generated
 -->
 
+<details class="imagegen-figure" markdown="1">
+<summary>配图：展开查看 imagegen2 视觉概览</summary>
+
 ![09｜Heartbeat：低频存在感与静默唤醒机制](../../assets/09-heartbeat-imagegen.png)
+
+</details>
 
 ## Heartbeat 不是 Cron-lite
 
@@ -150,12 +155,14 @@ Cron：到点执行一个明确 job，并留下 task/run/delivery 记录。
 
 Heartbeat 适合“检查和提醒”；Cron 适合“任务和承诺”。
 
-## Readability-coach 自检
+## 本章检查点
 
-- **一句话问题是否回答了？** 是。Heartbeat 解决的是没有用户输入时的低频醒来、检查、静默或提醒。
-- **有没有把 Heartbeat 写成 Cron-lite？** 没有。文中明确它是主会话 periodic turn，不创建 task records。
-- **有没有解释静默机制？** 有。解释了 `HEARTBEAT_OK`、ackMaxChars 和 heartbeat pair filtering。
-- **有没有保持 OpenClaw 自身叙事？** 有。围绕 Gateway、workspace、session、delivery 的长期运行时展开。
+读完这一章，你应该能：
+
+- 能解释 Heartbeat 是周期性主会话检查，不是 Cron-lite。
+- 能说清 HEARTBEAT_OK、active hours、light context 和 delivery target 如何降低打扰。
+- 能判断 Heartbeat 适合检查和提醒，而不是精确履约。
+
 
 ## Takeaway
 

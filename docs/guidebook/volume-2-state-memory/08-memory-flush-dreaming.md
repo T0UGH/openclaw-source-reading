@@ -78,9 +78,15 @@ asset_target: docs/assets/08-memory-flush-dreaming-imagegen.png
 status: generated
 -->
 
+<details class="imagegen-figure" markdown="1">
+<summary>配图：展开查看 imagegen2 视觉概览</summary>
+
 ![08｜Memory Flush 与 Dreaming：压缩前保存与后台晋升](../../assets/08-memory-flush-dreaming-imagegen.png)
 
 读图时可以把左半边当成“快路径”，右半边当成“慢路径”：Flush 贴着 compaction，目标是别丢；Dreaming 脱离当前回复，目标是别乱记。这个节奏差异是本章的主线。
+
+</details>
+
 
 ## 为什么 compaction summary 不够
 
@@ -233,22 +239,14 @@ Active Memory 是读路径，Memory Flush / Dreaming 是写入和整理路径。
 
 OpenClaw 把两边接起来，才形成个人 AI runtime 的连续性。
 
-## Readability-coach 自检
+## 本章检查点
 
-- **一句话问题是否回答了？**
-  是。OpenClaw 通过 Memory Flush 在压缩前保存重要上下文，通过 Dreaming 在后台整理并晋升短期信号。
+读完这一章，你应该能：
 
-- **有没有把 Heartbeat / Cron 混进来讲乱？**
-  没有。只在 Dreaming scheduling 处说明它由 memory-core 管理 recurring cron job，没有把 Dreaming 写成 Cron 本身。
+- 能区分 Memory Flush 的“压缩前保存”和 Dreaming 的“后台整理晋升”。
+- 能解释为什么 compaction summary 不能替代 memory 写回。
+- 能把 Active Memory、Flush、Dreaming 放进同一条记忆生命周期。
 
-- **有没有把 Dreaming 写成自动乱记？**
-  没有。文中强调 opt-in、scheduled、thresholded、reviewable，且只有 Deep phase 写 `MEMORY.md`。
-
-- **有没有和 Active Memory 区分清楚？**
-  有。Active Memory 是回复前读，Flush / Dreaming 是压缩前写与后台整理。
-
-- **有没有避免无关项目叙事？**
-  有。全文只围绕 OpenClaw memory lifecycle 展开。
 
 ## Takeaway
 

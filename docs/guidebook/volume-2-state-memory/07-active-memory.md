@@ -66,9 +66,15 @@ asset_target: docs/assets/07-active-memory-imagegen.png
 status: generated
 -->
 
+<details class="imagegen-figure" markdown="1">
+<summary>配图：展开查看 imagegen2 视觉概览</summary>
+
 ![07｜Active Memory：主回复前的 blocking memory pass](../../assets/07-active-memory-imagegen.png)
 
 图里的关键不是“多了一个 Agent”，而是“主回复前多了一个受限关卡”：它只读、只返回短摘要或 `NONE`，不写 memory，也不替主 Agent 说话。下面先解释为什么需要这个关卡。
+
+</details>
+
 
 ## 为什么“主 Agent 自己想起来”不够
 
@@ -162,12 +168,14 @@ Memory Flush：把经历沉淀成可用记忆。
 Active Memory：在需要时把可用记忆带回当前回复。
 ```
 
-## Readability-coach 自检
+## 本章检查点
 
-- **一句话问题是否回答了？** 是。Active Memory 是为了让相关长期记忆在主回复生成前就有机会出现，而不是依赖主 Agent 临时意识到要搜索。
-- **有没有写成万能记忆系统？** 没有。文中区分了 Active Memory、Memory Search、Memory Flush。
-- **有没有解释 blocking 的代价和边界？** 有。说明了 timeout、cache、模型选择、query mode、chat type、session toggle 等限制。
-- **有没有避免无关项目叙事？** 有。全文围绕 OpenClaw 机制展开。
+读完这一章，你应该能：
+
+- 能解释 Active Memory 为什么要在主回复前做一次 blocking recall。
+- 能区分 Active Memory、主 Agent 自己搜索、Memory Flush 各自解决什么问题。
+- 能理解 recall budget、routing 和 failure policy 为什么是运行时边界。
+
 
 ## Takeaway
 
