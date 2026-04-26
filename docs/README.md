@@ -4,6 +4,7 @@
 
 ## 正文入口
 
+- [站点首页](index.md)
 - [OpenClaw 源码阅读小书](guidebook/README.md)
 
 ## 支撑材料

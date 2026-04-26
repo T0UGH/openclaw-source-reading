@@ -1,0 +1,104 @@
+site_name: OpenClaw 源码阅读小书
+site_description: OpenClaw 源码阅读小书：理解 Gateway、Memory、Heartbeat、Cron 与个人 AI runtime
+site_url: https://t0ugh.github.io/openclaw-source-reading/
+repo_url: https://github.com/T0UGH/openclaw-source-reading
+repo_name: T0UGH/openclaw-source-reading
+
+docs_dir: docs
+site_dir: site
+
+use_directory_urls: true
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: white
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: 切换到深色模式
+    - scheme: slate
+      primary: black
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: 切换到浅色模式
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+exclude_docs: |
+  /README.md
+  AUTOPILOT_STATUS.md
+  cards/*
+  design/*
+  notes/*
+
+validation:
+  omitted_files: ignore
+  absolute_links: warn
+  unrecognized_links: warn
+
+extra_css:
+  - stylesheets/mermaid.css
+
+extra_javascript:
+  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
+
+nav:
+  - 首页: index.md
+  - 开始阅读｜小书总览: guidebook/README.md
+  - 第一卷｜概念迁移与入口边界:
+      - 00 给 Claude Code 用户的 OpenClaw 概念迁移表: guidebook/volume-1-concept-boundary/00-concept-migration.md
+      - 01 为什么 OpenClaw 值得单独读: guidebook/volume-1-concept-boundary/01-not-waiting-agent.md
+      - 02 Event Sources：Agent Run 从哪里来: guidebook/volume-1-concept-boundary/02-event-sources.md
+      - 03 Gateway：为什么入口不是 CLI: guidebook/volume-1-concept-boundary/03-gateway.md
+      - 04 Session Routing：消息如何变成上下文: guidebook/volume-1-concept-boundary/04-session-routing.md
+  - 第二卷｜长期状态与记忆:
+      - 05 Workspace Files：长期状态放在哪里: guidebook/volume-2-state-memory/05-workspace-files.md
+      - 06 Memory 总览：如何拥有可用记忆: guidebook/volume-2-state-memory/06-memory-overview.md
+      - 07 Active Memory：blocking memory pass: guidebook/volume-2-state-memory/07-active-memory.md
+      - 08 Memory Flush 与 Dreaming: guidebook/volume-2-state-memory/08-memory-flush-dreaming.md
+  - 第三卷｜时间、自动化与后台工作:
+      - 09 Heartbeat：没有用户输入时醒来: guidebook/volume-3-time-automation/09-heartbeat.md
+      - 10 Cron：精确调度与结果投递: guidebook/volume-3-time-automation/10-cron.md
+      - 11 Automation Layer：自动化分工: guidebook/volume-3-time-automation/11-automation-layer.md
+      - 12 Background Tasks 与 Subagent: guidebook/volume-3-time-automation/12-background-tasks-subagent.md
+  - 第四卷｜投递、扩展与安全边界:
+      - 13 Reply Shaping：聊天渠道回复整形: guidebook/volume-4-delivery-extension-safety/13-reply-shaping.md
+      - 14 Plugin 与 Channel：扩展世界入口: guidebook/volume-4-delivery-extension-safety/14-plugin-channel.md
+      - 15 Control Plane vs Runtime Plane: guidebook/volume-4-delivery-extension-safety/15-control-plane-runtime-plane.md
+      - 16 安全与隔离：暴露给真实消息渠道之后: guidebook/volume-4-delivery-extension-safety/16-safety-isolation.md

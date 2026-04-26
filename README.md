@@ -78,9 +78,9 @@ docs/
 ## 当前状态
 
 - 正文 00-16 共 17 篇已完成草稿。
-- 每篇正文包含源码锚点、Mermaid 机制图、`IMAGEGEN_PLACEHOLDER` 与可读性自检。
-- 已完成全书可读性第一轮、Mermaid / imagegen 占位符验收、源码锚点复核。
-- 下一阶段是发布入口和最终验收。
+- 每篇正文包含源码锚点、Mermaid 机制图、imagegen2 配图、`IMAGEGEN_PLACEHOLDER` 与可读性自检。
+- 已完成全书可读性复审、Mermaid / imagegen 验收、源码锚点复核与写作教练复看。
+- 当前已按 `claude-code-source-guide` 的 MkDocs / GitHub Pages 结构整理为公开站点。
 
 ## 支撑材料
 
@@ -90,4 +90,15 @@ docs/
 
 ## 本地阅读
 
-这个仓库目前以 Markdown 小书形式组织，没有强依赖站点生成器。直接从 `docs/guidebook/README.md` 进入即可。
+直接从 `docs/guidebook/README.md` 进入即可。
+
+如果要预览 GitHub Pages 站点：
+
+```bash
+pip install -r requirements.txt
+mkdocs serve
+```
+
+## GitHub Pages
+
+公开站点地址：<https://t0ugh.github.io/openclaw-source-reading/>
