@@ -1,66 +1,127 @@
 ---
 title: "01｜为什么 OpenClaw 值得单独读：它不是一个只等输入的 Agent"
-status: draft-card
+status: draft
 chapter: "01"
 slug: "not-waiting-agent"
+source_files:
+  - ~/workspace/openclaw/README.md
+  - ~/workspace/openclaw/docs/concepts/architecture.md
+  - ~/workspace/openclaw/docs/automation/index.md
+  - ~/workspace/openclaw/docs/gateway/heartbeat.md
+  - ~/workspace/openclaw/docs/automation/cron-jobs.md
 ---
 
 # 01｜为什么 OpenClaw 值得单独读：它不是一个只等输入的 Agent
 
-> 本篇状态：章节卡片 / 正文待写。后续写作必须先重新阅读下方源码锚点，再展开机制判断。
+一个熟悉 coding agent 的读者会自然地问：OpenClaw 值得单独读吗？如果只是多接几个聊天渠道、再封装一些工具，那它最多是“带消息入口的 agent 壳”。
 
-## 读者问题
+但 OpenClaw 真正值得单独读的地方不在这里。它的独特性不是一次 agent run 有多强，而是它让 agent 长期活在一个 Gateway 里：能接收外部事件，能维护长期 workspace，能定期醒来，能按精确时间执行任务，还能把结果投递回真实沟通渠道。
 
-OpenClaw 的独特性到底在哪里？
+> OpenClaw 不是一个只等用户输入的 agent，而是一个持续运行的个人 AI runtime。
 
-## 本篇先给的结论
+## 这篇先回答什么
 
-待正文写作时补充。结论必须回到这条主线：OpenClaw 不是只等用户输入的 coding agent，而是由 Gateway、Session、Workspace、Memory、Heartbeat、Cron、Delivery 等机制组合起来的个人 AI 运行时。
+- 为什么“request/response agent”不足以解释 OpenClaw；
+- Gateway、Memory、Heartbeat、Cron、Delivery 为什么必须放在同一条主线上看；
+- OpenClaw 和普通 coding agent 的差异到底落在哪里。
 
-## 先看一张机制图
+## 先看一张运行时图
 
-这张图先作为本篇的低分辨率机制草图，后续正文写作时需要根据源码锚点细化。
+这张图先回答一个问题：OpenClaw 为什么不是“用户问一句，agent 答一句”的结构？
 
 ```mermaid
-flowchart LR
-  CC[Claude Code 心智模型] --> Q[迁移问题]
-  Q --> OC[OpenClaw 运行时模型]
-  OC --> M[Memory / Heartbeat / Cron / Gateway]
-  M --> R[个人 AI 运行时]
+flowchart TB
+  subgraph world["真实世界事件"]
+    Msg[聊天消息]
+    Time[时间触发]
+    Hook[Webhook / Hook]
+    Node[设备 / 节点事件]
+  end
+
+  subgraph runtime["OpenClaw Runtime"]
+    GW[Gateway]
+    SR[Session Routing]
+    WS[Workspace Files]
+    Mem[Memory]
+    HB[Heartbeat]
+    Cron[Cron]
+    Agent[Agent Run]
+    Delivery[Reply Shaping / Delivery]
+  end
+
+  Msg --> GW
+  Time --> HB
+  Time --> Cron
+  Hook --> GW
+  Node --> GW
+  GW --> SR --> Agent
+  WS --> Agent
+  Mem --> Agent
+  HB --> Agent
+  Cron --> Agent
+  Agent --> Delivery
 ```
 
-读这张图时，先按这个顺序看：
-- 先看本篇讨论的入口或触发条件；
-- 再看它进入 OpenClaw 运行时之后由哪一层接住；
-- 最后看它如何影响长期状态、Agent Run 或真实渠道投递。
+读这张图时，建议先看三层：
+
+- 外层是真实世界事件，不只有用户 prompt；
+- 中间是 Gateway、Session、Workspace、Memory、Heartbeat、Cron 组成的运行时；
+- 末端是投递，不是简单打印结果。
 
 <!-- IMAGEGEN_PLACEHOLDER:
-title: 01｜为什么 OpenClaw 值得单独读：它不是一个只等输入的 Agent 机制图
+title: 01｜OpenClaw 不是只等输入的 Agent
 type: architecture
-purpose: 用一张正式技术架构图解释“OpenClaw 的独特性到底在哪里？”
-prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw 源码阅读第 01 篇：为什么 OpenClaw 值得单独读：它不是一个只等输入的 Agent。图中只保留少量标签，突出层次、边界和主链路；高对比、无 logo、无水印，不要装饰性插画。
+purpose: 解释 OpenClaw 的独特性来自长期运行时组合，而不是单次 agent run
+prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw personal AI runtime。外层是真实世界事件，中心是 Gateway/Session/Workspace/Memory/Heartbeat/Cron，右侧是 Agent Run 与 Delivery。少字、高对比、层次清楚，无 logo、无水印。
 asset_target: docs/assets/01-not-waiting-agent-imagegen.png
 status: pending
 -->
 
-## 源码锚点
+## 普通 coding agent 的默认形状
 
-- `~/workspace/openclaw/README.md`
-- `~/workspace/openclaw/docs/concepts/architecture.md`
-- `~/workspace/openclaw/docs/automation/index.md`
+普通 coding agent 的形状比较清楚：用户提出任务，agent 读取项目上下文，调用工具，最后给出结果或改代码。它的强项是把一次开发任务完成好。
 
-## 写作边界
+这个模型有两个隐含前提：
 
-- 不引入无关项目叙事。
-- 不写成 Claude Code 平替；Claude Code 只作为读者迁移背景。
-- 不做目录游览；要回答读者问题。
-- 术语第一次出现时要用中文说人话。
+1. 运行由用户输入触发；
+2. 任务结束后，系统基本回到等待状态。
 
-## 正文大纲草案
+OpenClaw 当然也能跑一次 agent 任务，但如果只看这一面，就会漏掉最重要的部分。README 明确说它是运行在自己设备上的 personal AI assistant，会在已有渠道里回答你；Architecture 文档进一步说明，一个长期存在的 Gateway 统一维护消息面、WebSocket 控制面、节点连接和事件流。也就是说，agent 并不是孤立地等待下一句 prompt，而是被放进一个持续运转的外壳里。
 
-1. 从读者问题进入；
-2. 先给本篇结论；
-3. 对照普通 coding agent / Claude Code 心智模型的失效点；
-4. 按源码锚点解释 3-5 个机制层；
-5. 区分相邻机制边界；
-6. 留下一个能接住下一篇的 takeaway。
+## Gateway 让 agent 进入真实世界
+
+Gateway 的意义不是“又多了一个 API server”。Architecture 文档说 Gateway 维护 provider connections，暴露 typed WebSocket API，校验 inbound frames，并发出 `agent`、`chat`、`presence`、`health`、`heartbeat`、`cron` 等事件。
+
+这些描述合起来说明一件事：Gateway 是 OpenClaw 的第一运行边界。真实世界的消息、控制面请求、节点能力、定时事件，都要先进入这个边界，再被路由到合适的 session 和 agent run。
+
+所以，OpenClaw 的入口不是 CLI，而是一个长期存在的事件入口。
+
+## Heartbeat 让 agent 不必等人开口
+
+Heartbeat 文档说得很直接：Heartbeat runs periodic agent turns in the main session。它是周期性的主会话 turn，不创建 background task records；如果没事，回复 `HEARTBEAT_OK`，OpenClaw 会把这种确认当作 ack 处理，必要时直接丢掉。
+
+这件事的产品含义很重要：OpenClaw 可以低频检查世界，而不是一直沉默等你发消息。它适合做 inbox、calendar、notifications 这类“有事再提醒，没事别打扰”的周期感知。
+
+这和普通 coding agent 的差异不在工具，而在存在方式。普通 agent 常常是被召唤；OpenClaw 可以自己醒来检查。
+
+## Cron 让 agent 拥有精确时间轴
+
+Heartbeat 是近似周期检查，Cron 则是精确调度。Cron 文档明确说：Cron runs inside the Gateway process；job definitions 持久化在 `~/.openclaw/cron/jobs.json`，runtime state 另存；所有 cron executions 都会创建 background task records。
+
+这意味着 Cron 不是外部系统随便执行一个 shell 命令。它是 Gateway 拥有的调度器，会唤醒 agent，并处理 session、isolated run、delivery、run history、task record 等运行时问题。
+
+这给 OpenClaw 增加了一条普通 coding agent 通常没有的时间轴：不是“用户什么时候来问”，而是“系统什么时候应该主动做”。
+
+## Memory 和 Workspace 让结束不是结束
+
+如果每一次 agent run 都只靠当前上下文，那么长期运行意义有限。OpenClaw 把 workspace files、memory、standing orders、heartbeat checklist 这些长期材料放进运行时。Automation 文档里提到 Standing Orders 会存在 workspace files 并注入 session；Heartbeat 文档也说明 `HEARTBEAT.md` 可以成为周期检查的轻量上下文。
+
+后面的 Memory 卷会展开更多层次。这里只需要先建立一个判断：OpenClaw 的一次运行结束后，重要状态仍然可能留在 workspace、memory、cron/task state、session records 或 delivery history 里。系统不是简单归零。
+
+## 这篇留下的判断
+
+OpenClaw 值得单独读，不是因为它“多接了一些渠道”，也不是因为它“工具更多”。它真正不同的地方是：
+
+> 它把 agent 放进真实世界事件流和长期运行时里，让输入、时间、记忆、后台任务和投递共同决定一次运行。
+
+后面几篇会顺着这条主线往下拆：事件从哪里来，为什么 Gateway 是第一边界，真实消息如何变成 session，长期状态又如何进入下一次运行。
