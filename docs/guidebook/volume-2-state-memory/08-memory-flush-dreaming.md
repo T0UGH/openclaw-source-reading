@@ -80,6 +80,8 @@ status: generated
 
 ![08｜Memory Flush 与 Dreaming：压缩前保存与后台晋升](../../assets/08-memory-flush-dreaming-imagegen.png)
 
+读图时可以把左半边当成“快路径”，右半边当成“慢路径”：Flush 贴着 compaction，目标是别丢；Dreaming 脱离当前回复，目标是别乱记。这个节奏差异是本章的主线。
+
 ## 为什么 compaction summary 不够
 
 Compaction summary 的目标是让当前会话继续跑下去。它会尽量保留任务状态、约束、已经做过的事情、下一步。但 memory 的目标不完全一样。
@@ -223,7 +225,7 @@ openclaw memory rem-backfill --path ./memory --stage-short-term
 08 Flush / Dreaming：长会话和后台如何把经历沉淀成长期记忆。
 ```
 
-Active Memory 是读路径，Memory Flush / Dreaming 是写入和整理路径。缺任何一边，OpenClaw 的 memory 都不完整。
+Active Memory 是读路径，Memory Flush / Dreaming 是写入和整理路径。更细一点说，Flush 仍然贴近当前会话和 compaction，Dreaming 则是后台生命周期；它们都服务长期记忆，但不在主回复前替模型“想起”内容。缺任何一边，OpenClaw 的 memory 都不完整。
 
 如果只有 Active Memory，没有 Flush / Dreaming，系统只能召回已经存在的记忆，新的长期事实容易在压缩中丢失。
 

@@ -63,7 +63,7 @@ flowchart TD
   Result --> Log["run log / task ledger"]
 ```
 
-这张图里有三个要点：Cron 运行在 Gateway，不在模型里；job definition 和 runtime state 分开保存；执行结果不会简单打印，而会进入 delivery 和 task/run log。
+这张图里有三个要点：Cron 运行在 Gateway，不在模型里；job definition 和 runtime state 分开保存；执行结果不会简单打印，而会进入 delivery 和 task/run log。配图放在这里，是为了先给读者一个完整链路，再拆开看 scheduler、session、task ledger 和 delivery 各自负责什么。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 10｜Cron：Gateway 内建调度、隔离执行与结果投递
@@ -80,7 +80,7 @@ status: generated
 
 如果只是“定时执行命令”，操作系统 crontab 当然能做。但 OpenClaw 的 Cron 要调度的不是 shell 命令，它调度的是个人 AI runtime 里的 agent work。
 
-这会带来一个结果它必须知道：
+这会带来一个直接结果：它必须知道运行时里的这些信息：
 
 - 当前有哪些 agent；
 - job 应该进入哪个 session；
@@ -136,7 +136,7 @@ Cron 更有意思的地方在 execution style。
 | Current session | 创建时绑定当前 session | 与当前对话上下文强相关的 recurring work |
 | Custom session | 持久命名 session | 需要跨多次 run 积累历史的流程 |
 
-Main session job 更像“把一个事件放进主会话时间线”。Isolated job 则是“另开一个专用执行空间”。这也是 Cron 和 Heartbeat 的重要差异：Cron 可以明确选择执行空间，而 Heartbeat 默认是周期性主会话 turn。
+Main session job 更像“把一个已承诺的事件放进主会话时间线”；这里的 wake heartbeat 是一种把系统事件浮现给主会话的路径，不是把 Cron 退化成 Heartbeat。Isolated job 则是“另开一个专用执行空间”。这也是 Cron 和 Heartbeat 的重要差异：Cron 可以明确选择执行空间，而 Heartbeat 默认是周期性主会话 turn。
 
 文档还强调：所有 cron executions 都会创建 background task records。这样一来，Cron 就不再是黑盒定时器，而是一项可审计的后台工作。
 

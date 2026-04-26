@@ -101,6 +101,8 @@ status: generated
 
 ![06｜Memory 总览：OpenClaw 的分层记忆系统](../../assets/06-memory-overview-imagegen.png)
 
+这张图片适合作为总览，不需要一次记住所有箭头。先抓住三层：workspace 文件是事实落点，memory plugin 是运行时边界，Active Memory / Flush / Dreaming 是读写和整理节奏。下面再逐层拆开。
+
 ## 第一层：文件，不是隐藏模型状态
 
 `docs/concepts/memory.md` 开头就把边界说得很直：OpenClaw remembers things by writing plain Markdown files in your agent's workspace。模型只“记得”写到磁盘上的内容，没有隐藏状态。
@@ -121,7 +123,7 @@ status: generated
 - daily notes 是当天或近期的运行上下文；
 - `DREAMS.md` 是后台整理和人工审阅的表面。
 
-这样做的好处是，记忆不会变成一个黑盒。用户、Agent、插件、后台任务都可以围绕这些文件协作。
+这样做的好处是，记忆不会变成一个黑盒。用户、Agent、插件、后台任务都可以围绕这些文件协作。这里也要和上一章的 workspace 区分开：workspace 是长期状态的容器，Memory 是在这个容器里由插件托管的一组文件、工具和生命周期规则。
 
 ## 第二层：插件托管，而不是 core 硬编码
 
@@ -192,7 +194,7 @@ OpenClaw 的 Automatic memory flush 就是为了挡这一下。`docs/concepts/me
 
 这条路径不依赖用户显式说“记住”，它会在长期运行中主动保护上下文连续性。
 
-它和 Active Memory 的方向相反：
+它和 Active Memory 的方向相反。Active Memory 是“回复前读回来”，Memory Flush 是“压缩前写回去”：
 
 ```text
 Active Memory：从长期记忆读回当前回复。

@@ -63,7 +63,7 @@ flowchart TB
   Outbound --> World["Real-world channel"]
 ```
 
-图里，plugin 位于 agent loop 之前和之外：它从 discovery 延伸到 runtime surface，再延伸到 inbound/outbound，是一层能力接入机制。
+读这张图时，要先抓住一个边界：plugin 不等于“多一个模型工具”。它位于 agent loop 之前和之外，从 discovery 延伸到 runtime surface，再延伸到 inbound/outbound，是一层能力接入机制。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 14｜Plugin 与 Channel：OpenClaw 的世界入口扩展层
@@ -76,13 +76,15 @@ status: generated
 
 ![14｜Plugin 与 Channel：OpenClaw 的世界入口扩展层](../../assets/14-plugin-channel-imagegen.png)
 
-## Capability model：插件注册的是能力，不只是工具
+图片里的 Channel plugin 被放在中间，不是因为它比 provider、media、hook 更“高级”，而是因为它最能暴露 OpenClaw 与普通 extension 的差别：真实渠道既是事件入口，也是会话边界、权限边界和结果出口。下面只围绕这条差别看 plugin / channel 的职责。
+
+## Capability model：插件注册的是 runtime 能力，不只是工具
 
 `docs/plugins/architecture.md` 的 public capability model 列出了一张表：Text inference、CLI inference backend、Speech、Realtime transcription、Realtime voice、Media understanding、Image generation、Music generation、Video generation、Web fetch、Web search、Channel / messaging、Gateway discovery。
 
-这已经能看出 OpenClaw plugin 的尺度：它接入的是运行时能力。一个 OpenAI plugin 可能同时拥有 text inference、speech、media understanding、image generation；一个 channel plugin 则让 OpenClaw 进入一个聊天平台。
+这已经能看出 OpenClaw plugin 的尺度：它接入的是运行时能力平面。一个 OpenAI plugin 可能同时拥有 text inference、speech、media understanding、image generation；一个 channel plugin 则让 OpenClaw 进入一个聊天平台。
 
-这和“给模型加一个函数”不是同一个层级。
+这和“给模型加一个函数”不是同一个层级。工具只是能力消费方式之一，plugin 更像能力的所有权边界：谁提供、谁配置、谁诊断、谁在运行时接管外部世界。
 
 ## Plugin shapes：OpenClaw 关心插件实际注册了什么
 
@@ -106,7 +108,7 @@ plugin architecture 文档把加载管线拆成四层：
 3. **Runtime loading**：native plugin 通过 `register(api)` 把 capabilities 注册进 central registry；兼容 bundle 可以先归一化 registry record，而不导入 runtime code；
 4. **Surface consumption**：OpenClaw 读取 registry，暴露 tools、channels、provider setup、hooks、HTTP routes、CLI commands、services。
 
-这说明 OpenClaw 明确区分 control plane 和 runtime plane。manifest / schema / setup / diagnostics 应尽量不启动重 runtime；实际行为由 full registration path 激活。
+这说明 OpenClaw 明确区分 control plane 和 runtime plane。manifest / schema / setup / diagnostics 应尽量不启动重 runtime；实际行为由 full registration path 激活。这里不是为了列出加载目录，而是在说明同一个 plugin 有两种表面：可被控制面安全读取的静态表面，以及真正执行外部能力的运行时表面。
 
 这个设计对长期运行时很重要：Gateway 启动、status、doctor、setup、UI schema 都不能因为看一眼 plugin，就把所有客户端、socket、listener、subprocess 全部启动。
 
@@ -205,4 +207,4 @@ OpenClaw plugin 要回答的问题更多：
 
 ## Takeaway
 
-OpenClaw 的 plugin 系统要做的，是把外部世界的能力以可发现、可验证、可懒加载、可诊断的方式接入运行时，而不只是“给模型多装几个工具”。Channel plugin 更进一步：它把真实聊天平台变成事件入口、会话边界、权限边界和结果出口。
+OpenClaw 的 plugin 系统要做的，是把外部世界的能力以可发现、可验证、可懒加载、可诊断的方式接入个人 AI runtime，而不只是“给模型多装几个工具”。Channel plugin 更进一步：它把真实聊天平台变成事件入口、会话边界、权限边界和结果出口；一旦这层边界不清，后面的 Reply Shaping、session routing、approval 和 delivery 都会失去落点。

@@ -55,16 +55,7 @@ flowchart TB
 定时任务状态"]
   end
 
-  WS -->
-
-## 源码锚点
-
-- `~/workspace/openclaw/docs/concepts/multi-agent.md`
-- `~/workspace/openclaw/docs/concepts/memory.md`
-- `~/workspace/openclaw/src/agents/workspace.ts`
-- `~/workspace/openclaw/src/memory/root-memory-files.ts`
-- `~/workspace/openclaw/src/config/sessions/paths.ts`
- Run["Agent Run
+  WS --> Run["Agent Run
 启动时读取/运行时写入"]
   State --> Run
   Run --> WS
@@ -87,6 +78,16 @@ status: generated
 -->
 
 ![OpenClaw Workspace 长期状态地图](../../assets/05-workspace-files-imagegen.png)
+
+图片和 Mermaid 讲的是同一件事：先把“人类可维护的 workspace 文件”和“runtime 管理的 agent state/session 文件”分开，再看一次 agent run 如何从两边恢复语境。下面按层展开。
+
+## 源码锚点
+
+- `~/workspace/openclaw/docs/concepts/multi-agent.md`
+- `~/workspace/openclaw/docs/concepts/memory.md`
+- `~/workspace/openclaw/src/agents/workspace.ts`
+- `~/workspace/openclaw/src/memory/root-memory-files.ts`
+- `~/workspace/openclaw/src/config/sessions/paths.ts`
 
 ## 第一层：workspace 是默认 cwd，也承载长期材料
 
@@ -128,7 +129,7 @@ status: generated
 
 `src/memory/root-memory-files.ts` 进一步把 `MEMORY.md` 作为 canonical root memory filename，并保留对旧 `memory.md` 的修复路径。这说明 OpenClaw 对根记忆文件有明确规范，而不是让 agent 随意散落状态。
 
-这也解释了为什么 workspace 像“长期生活空间”：记忆不是外部黑盒，也不是模型缓存，它是一组可读、可审查、可维护的文件。
+这也解释了为什么 workspace 像“长期生活空间”：记忆不是外部黑盒，也不是模型缓存，它是一组可读、可审查、可维护的文件。换句话说，Workspace 是这些文件所在的空间，Memory 是其中一组有生命周期规则的长期状态；不要把二者混成同一个概念。
 
 ## 第四层：sessions 和 agentDir 保存运行时索引
 

@@ -49,16 +49,7 @@ flowchart TB
     Delivery[Reply Shaping / Delivery]
   end
 
-  Msg -->
-
-## 源码锚点
-
-- `~/workspace/openclaw/README.md`
-- `~/workspace/openclaw/docs/concepts/architecture.md`
-- `~/workspace/openclaw/docs/automation/index.md`
-- `~/workspace/openclaw/docs/gateway/heartbeat.md`
-- `~/workspace/openclaw/docs/automation/cron-jobs.md`
- GW
+  Msg --> GW
   Time --> HB
   Time --> Cron
   Hook --> GW
@@ -87,6 +78,16 @@ status: generated
 -->
 
 ![01｜OpenClaw 不只等输入的 Agent](../../assets/01-not-waiting-agent-imagegen.png)
+
+这张图把本章的读法压成一句话：不要只盯着中间的 Agent Run，而要看它前面的事件入口、旁边的长期状态，以及后面的投递回路。
+
+## 源码锚点
+
+- `~/workspace/openclaw/README.md`
+- `~/workspace/openclaw/docs/concepts/architecture.md`
+- `~/workspace/openclaw/docs/automation/index.md`
+- `~/workspace/openclaw/docs/gateway/heartbeat.md`
+- `~/workspace/openclaw/docs/automation/cron-jobs.md`
 
 ## 普通 coding agent 的默认形状
 

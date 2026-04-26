@@ -47,15 +47,7 @@ flowchart LR
   Iso[Isolated / Custom Session Run]
   Delivery[Reply Shaping / Delivery]
 
-  User -->
-
-## 源码锚点
-
-- `~/workspace/openclaw/docs/concepts/architecture.md`
-- `~/workspace/openclaw/docs/automation/index.md`
-- `~/workspace/openclaw/docs/gateway/heartbeat.md`
-- `~/workspace/openclaw/docs/automation/cron-jobs.md`
- GW
+  User --> GW
   Channel --> GW
   Heartbeat --> GW
   Cron --> GW
@@ -85,6 +77,15 @@ status: generated
 -->
 
 ![02｜OpenClaw Event Sources 总图](../../assets/02-event-sources-imagegen.png)
+
+这张图之后，后文会刻意先分来源、再讲进入后的处理。这样可以避免把 heartbeat、cron、webhook 都误读成“另一种 prompt”。
+
+## 源码锚点
+
+- `~/workspace/openclaw/docs/concepts/architecture.md`
+- `~/workspace/openclaw/docs/automation/index.md`
+- `~/workspace/openclaw/docs/gateway/heartbeat.md`
+- `~/workspace/openclaw/docs/automation/cron-jobs.md`
 
 ## 第一类：人发来的消息
 

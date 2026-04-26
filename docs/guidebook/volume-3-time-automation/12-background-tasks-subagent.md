@@ -85,7 +85,7 @@ flowchart TD
   Task --> Audit["tasks list / show / audit / maintenance"]
 ```
 
-这两张图要分开看：第一张是单个 task 的状态机，第二张是 task 从 detached source 到通知与审计的运行链路。
+这两张图要分开看：第一张是单个 task 的状态机，第二张是 task 从 detached source 到通知与审计的运行链路。配图放在状态机之后，是为了把“账本如何变更”和“结果如何回到用户”连起来，而不是暗示 Tasks 会负责调度这些来源。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 12｜Background Tasks：OpenClaw 后台工作账本
@@ -102,7 +102,7 @@ status: generated
 
 `docs/automation/tasks.md` 开头就先划边界：如果你在找 scheduling，看 Automation & Tasks；这个页面讲的是 tracking background work，不是 scheduling。
 
-这句话很重要。Tasks 不决定工作什么时候运行。时间由 Cron 和 Heartbeat 决定；事件反应由 Hooks 决定；长期规则由 Standing Orders 决定。Tasks 只负责记录：某个 detached work 被创建了、开始了、结束了、失败了还是丢了。
+这句话很重要。Tasks 不决定工作什么时候运行。精确时间承诺由 Cron 决定；周期主会话醒来由 Heartbeat 决定；事件反应由 Hooks 决定；长期规则由 Standing Orders 决定。Tasks 只负责记录：某个 detached work 被创建了、开始了、结束了、失败了还是丢了。
 
 这也是为什么文档说：Tasks are records, not schedulers。
 
@@ -144,9 +144,9 @@ OpenClaw 的 task completion 是 push-driven。文档说得很直接：detached 
 通知有两条路径：
 
 1. **Direct delivery**：如果 task 有 channel target，也就是 `requesterOrigin`，完成消息直接发回 Telegram、Discord、Slack 等真实渠道；
-2. **Session-queued delivery**：如果 direct delivery 失败或没有 origin，更新会被排成 requester session 的 system event，在下一次 heartbeat 或 wake 中浮现。
+2. **Session-queued delivery**：如果 direct delivery 失败或没有 origin，更新会被排成 requester session 的 system event，等待下一次 heartbeat 或其他 wake 路径把它浮现出来。
 
-这和前面的 Heartbeat、Cron 连起来了：后台工作完成后，不需要等用户回来追问，运行时会主动把结果送回用户所在的渠道或 session。
+这和前面的 Heartbeat、Cron 连起来了：Cron 可以产生 task，task completion 又可以借助 delivery 或 wake 浮现结果；但 Tasks 本身仍然只是记录与通知层，不是新的触发器。
 
 ## Notify policy：同一类后台工作，不一定同样吵
 

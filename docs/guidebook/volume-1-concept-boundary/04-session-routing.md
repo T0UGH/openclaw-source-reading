@@ -62,6 +62,8 @@ status: generated
 
 ![Session Routing 路由键](../../assets/04-session-routing-imagegen.png)
 
+这张图把本章的主线放在中间那枚 `sessionKey` 上：左边是真实通信关系，右边是 OpenClaw 的 session store、transcript 和 agent run。后文会沿着这枚键解释连续性和隔离性。
+
 ## 源码锚点
 
 - `~/workspace/openclaw/docs/concepts/session.md`：session routing、DM/group/room/cron/webhook 的隔离策略。
@@ -137,7 +139,9 @@ OpenClaw 的 session 文档还区分了几个时间字段：
 
 ## 小结
 
-OpenClaw 的 session 不只是聊天历史 ID，还是外部关系、agent identity 和 runtime state 的路由键。
+读完这一篇，可以把 OpenClaw 的 session 记成一句话：
+
+> sessionKey 是把真实世界关系接到 agent runtime 的那把钥匙；它既决定上下文连续，也决定哪些人、哪些渠道、哪些自动化事件必须彼此隔离。
 
 下一篇会继续往下走：session 选好了，OpenClaw 还需要一个长期生活空间来放规则、身份、记忆、heartbeat 清单、会话痕迹和自动化状态。这个空间就是 workspace。
 

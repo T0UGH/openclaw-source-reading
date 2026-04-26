@@ -61,7 +61,7 @@ flowchart TD
   Reply -->|Alert text| Deliver["按 target / last / channel 投递"]
 ```
 
-这张图想说明的不是“有个定时器”。从 tick 到静默或投递之间，还有一连串边界：启用状态、active hours、session、上下文模式、ack 过滤和 delivery target。
+这张图想说明的不是“有个定时器”。从 tick 到静默或投递之间，还有一连串边界：启用状态、active hours、session、上下文模式、ack 过滤和 delivery target。下面的配图可以先当作一张产品级运行路线图；真正的边界，要放回“Heartbeat 不是 Cron-lite”里看。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 09｜Heartbeat：低频存在感与静默唤醒机制
@@ -85,9 +85,9 @@ status: generated
 - 定期看看 inbox / calendar / reminders 里有没有需要提醒的内容；
 - 检查长期关注事项是否有变化；
 - 用低频方式把重要信息浮现给用户；
-- 批量处理多个轻量检查项，避免每个检查都单独建任务。
+- 聚合查看多个轻量检查项，避免把每个检查都拆成独立调度任务。
 
-Cron 走的是精确时间轴：`at`、`every`、cron expression、timezone、delivery、isolated execution。下一篇会展开。
+Cron 走的是精确时间轴：`at`、`every`、cron expression、timezone、delivery、isolated execution。也就是说，Heartbeat 可以“周期醒来看看”，但不应该承担“某个时刻必须执行某个 job”的承诺；下一篇会展开这一点。
 
 ## `HEARTBEAT.md`：周期醒来时读什么
 

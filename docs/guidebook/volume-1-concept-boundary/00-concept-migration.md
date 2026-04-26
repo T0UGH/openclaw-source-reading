@@ -37,15 +37,7 @@ flowchart LR
     R[项目目录]
     T[工具调用]
     A[回答或改代码]
-    P -->
-
-## 源码锚点
-
-- `docs/design/book-architecture-v0.3.md`
-- `~/workspace/openclaw/README.md`
-- `~/workspace/openclaw/docs/concepts/architecture.md`
-- `~/workspace/openclaw/docs/automation/index.md`
- R --> T --> A
+    P --> R --> T --> A
   end
 
   subgraph oc["OpenClaw"]
@@ -77,6 +69,15 @@ status: generated
 -->
 
 ![00｜Claude Code 到 OpenClaw 的概念迁移图](../../assets/00-concept-migration-imagegen.png)
+
+这张生成图的价值不在于复述所有模块，而是把视角切换画出来：左边是一条开发任务链，右边是一条长期运行时链。后文会按这条右侧链路逐步拆开。
+
+## 源码锚点
+
+- `docs/design/book-architecture-v0.3.md`
+- `~/workspace/openclaw/README.md`
+- `~/workspace/openclaw/docs/concepts/architecture.md`
+- `~/workspace/openclaw/docs/automation/index.md`
 
 ## 第一组迁移：从 CLI session 到 routed session
 

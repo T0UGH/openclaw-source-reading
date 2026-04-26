@@ -40,7 +40,7 @@ channel / thread / requester]
   Delivery -.路由错误.-> Misdeliver[投递到错误对象]
 ```
 
-这张图想表达的不是“哪一层最安全”。重点在于，每一层都在缩小后续层的风险半径。只在最后一层拦命令，已经太晚。
+这张图想表达的不是“哪一层最安全”。重点在于，每一层都在缩小后续层的风险半径。安全从消息进入 Gateway 的那一刻就开始了；只在最后一层拦命令，已经太晚。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 16｜安全与隔离：当 Agent 暴露给真实消息渠道之后 机制图
@@ -52,6 +52,8 @@ status: generated
 -->
 
 ![16｜安全与隔离：当 Agent 暴露给真实消息渠道之后 机制图](../../assets/16-safety-isolation-imagegen.png)
+
+图片把安全路径画成入口到出口的闭环。下面不是逐个列安全模块，而是沿着同一个问题推进：一个外部事件进入长期运行的个人 AI runtime 后，系统如何确认它是谁、属于哪个 session、能触发什么、会污染哪些状态、最后应该投递到哪里。
 
 ## 源码锚点
 
@@ -81,7 +83,7 @@ status: generated
 
 `src/gateway/method-scopes.ts` 把 Gateway 方法映射到 operator scopes：`read`、`write`、`admin`、`approvals`、`pairing`、`talk-secrets`。未分类方法默认没有 least-privilege scopes，`authorizeOperatorScopesForMethod(...)` 也体现了默认收紧的思路：没有足够 scope，就不允许调用。
 
-所以 Gateway 不是薄薄一层转发器。它是外部世界进入 OpenClaw runtime 的第一道边界。
+所以 Gateway 不是薄薄一层转发器。它是外部世界进入 OpenClaw runtime 的第一道边界，也是后面 session、tool、plugin、delivery 判断能否成立的前提。
 
 ## 2. Session 隔离：安全不只是“谁能执行命令”
 
@@ -127,7 +129,7 @@ sandbox 有几个维度：
 - workspace access：本地 bind/copy、remote-canonical、mirror 等不同模型；
 - browser sandbox：CDP、网络、noVNC 访问也有额外限制。
 
-这里容易误解的是：sandbox 不是“有了就万事大吉”。文档明确指出，Gateway 不在 sandbox 里；elevated tool 可以绕过 sandbox；如果 sandbox 关闭，工具就在 host 上跑。也就是说，sandbox 是 runtime blast radius 控制，不能替代入口认证、session 隔离、插件边界和投递边界。
+这里容易误解的是：sandbox 不是“有了就万事大吉”。文档明确指出，Gateway 不在 sandbox 里；elevated tool 可以绕过 sandbox；如果 sandbox 关闭，工具就在 host 上跑。也就是说，sandbox 是 Runtime Plane 的 blast radius 控制，不能替代入口认证、session 隔离、插件边界和投递边界。
 
 ## 5. Exec approvals：当 sandbox 需要逃逸到真实宿主机
 
@@ -188,7 +190,7 @@ OpenClaw 还要处理更现实的情况：有些命令必须在 gateway host 或
 
 本章保留一句话：**OpenClaw 的安全从 ingress 开始，到 delivery 结束；exec approval 只是其中一环。**
 
-当 Agent 暴露给真实消息渠道之后，安全不再是“这条 shell 命令能不能跑”，而是“这个外部事件是否被正确认证、正确归属、正确隔离、正确限制、正确执行、正确投递”。这也是整本小书最后要留下的 runtime 视角：OpenClaw 的复杂性不是因为目录多，而是因为它把 Agent 放进了一个会长期存在、会醒来、会记忆、会跨渠道行动的现实环境。
+当 Agent 暴露给真实消息渠道之后，安全不再是“这条 shell 命令能不能跑”，而是“这个外部事件是否被正确认证、正确归属、正确隔离、正确限制、正确执行、正确投递”。这也是整本小书最后要留下的 runtime 视角：OpenClaw 的复杂性不是因为目录多，而是因为它把 Agent 放进了一个会长期存在、会醒来、会记忆、会跨渠道行动的现实环境。安全边界讲清楚，前面所有 delivery、plugin、control plane 的设计才不会只是架构分层，而会变成可运行的个人 AI runtime 保护网。
 
 ## Readability-coach 自检
 

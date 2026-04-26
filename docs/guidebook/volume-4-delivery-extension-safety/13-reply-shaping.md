@@ -57,7 +57,7 @@ sequenceDiagram
   Channel-->>Source: user-visible reply
 ```
 
-图里可以看到，模型输出只是 Reply Shaping 的输入之一。工具可能已经发过消息，payload 可能带媒体，channel 可能需要 reply-to 或 thread id，还有一些文本应该被静默丢弃。
+读这张图时，不要把 Reply Shaping 理解成“把文字排漂亮”。它解决的是投递边界：模型输出只是输入之一；工具可能已经发过消息，payload 可能带媒体，channel 可能需要 reply-to 或 thread id，还有一些文本应该被静默丢弃。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 13｜Reply Shaping：从模型输出到渠道消息
@@ -69,6 +69,8 @@ status: generated
 -->
 
 ![13｜Reply Shaping：从模型输出到渠道消息](../../assets/13-reply-shaping-imagegen.png)
+
+图片把核心路径压成三段：Agent Loop 产出混合事件，Reply Shaping 判断哪些内容可见、可发、该发到哪里，Outbound / Channel 再把它翻译成平台消息。下面几节只沿着这条边界展开，不做源码目录游览。
 
 ## Agent loop 里的输出不是一种东西
 
@@ -83,7 +85,7 @@ status: generated
 - 工具已经通过 messaging tool 发送过的用户可见消息；
 - 媒体、音频、interactive blocks、channelData。
 
-所以，“最终回复”不是一个字符串，而是一组 payload。Reply Shaping 的第一步，就是把这些混合输出变成可判断、可渲染、可投递的结构。
+所以，“最终回复”不是一个字符串，而是一组 payload。Reply Shaping 的第一步，就是把这些混合输出变成可判断、可渲染、可投递的结构。后面的 `NO_REPLY`、去重、reply-to 和 fallback，都只是这个边界问题的不同切面。
 
 ## `NO_REPLY`：沉默也是一种合法输出
 
@@ -157,4 +159,4 @@ Reply Shaping 不应该知道每个渠道的所有细节。它负责形成通用
 
 ## Takeaway
 
-Reply Shaping 是 OpenClaw 从模型世界走向真实渠道世界的转换层。它帮助系统判断：该发什么、不该发什么、发到哪里、用什么 payload 形态发、怎样避免重复、怎样保留线程语义，以及失败时怎样给用户一个可见结果。
+Reply Shaping 是 OpenClaw 从模型世界走向真实渠道世界的转换层。它把“模型生成了什么”改写成一组运行时判断：什么该发、什么该静默、发到哪里、用什么 payload 形态发、怎样避免重复、怎样保留线程语义，以及失败时怎样给用户一个可见结果。没有这一层，聊天渠道里的 Agent 很容易变成会重复、会串线、会误投递的文本打印机。
