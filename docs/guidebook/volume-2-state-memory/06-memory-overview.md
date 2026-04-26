@@ -96,8 +96,10 @@ type: memory-map
 purpose: 用一张正式中文技术架构图解释 OpenClaw memory 的文件层、插件层、检索层、主动召回层、生命周期层和知识库层
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Memory Overview。画面分为六层：Workspace Files、Memory Plugin Capability、Memory Search Tools、Active Memory、Memory Flush/Dreaming、Memory Wiki。突出闭环关系：写入、索引、召回、保存、晋升、再召回。高对比、工程化、少量标签、无 logo、无水印。
 asset_target: docs/assets/06-memory-overview-imagegen.png
-status: pending
+status: generated
 -->
+
+![06｜Memory 总览：OpenClaw 的分层记忆系统](../../assets/06-memory-overview-imagegen.png)
 
 ## 第一层：文件，不是隐藏模型状态
 

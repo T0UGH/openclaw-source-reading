@@ -71,8 +71,10 @@ type: runtime-flow
 purpose: 用一张正式中文技术架构图解释 OpenClaw Cron 如何持久化任务、到点唤醒、选择 session 执行，并通过 announce/webhook/none 投递结果
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Cron。画面包含 jobs.json、jobs-state.json、Gateway CronService、main/isolated/current/custom session、background task、delivery modes、run log。突出“精确调度”和“结果投递”。高对比、工程化、少量标签、无 logo、无水印。
 asset_target: docs/assets/10-cron-imagegen.png
-status: pending
+status: generated
 -->
+
+![10｜Cron：Gateway 内建调度、隔离执行与结果投递](../../assets/10-cron-imagegen.png)
 
 ## Cron 为什么必须在 Gateway 里
 

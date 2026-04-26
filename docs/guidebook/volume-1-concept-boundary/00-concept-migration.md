@@ -73,8 +73,10 @@ type: comparison
 purpose: 用一张对照图解释哪些 Claude Code 心智模型不能直接套到 OpenClaw
 prompt_seed: 生成一张 16:9 中文技术对照图，左侧是 Claude Code/coding agent 的 prompt->repo->tools->answer，右侧是 OpenClaw 的 event->Gateway->Session Routing->Workspace/Memory->Agent Run->Delivery。少字、高对比、技术架构风格，无 logo、无水印。
 asset_target: docs/assets/00-concept-migration-imagegen.png
-status: pending
+status: generated
 -->
+
+![00｜Claude Code 到 OpenClaw 的概念迁移图](../../assets/00-concept-migration-imagegen.png)
 
 ## 第一组迁移：从 CLI session 到 routed session
 

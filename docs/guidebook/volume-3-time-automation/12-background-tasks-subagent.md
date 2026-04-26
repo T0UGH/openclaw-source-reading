@@ -93,8 +93,10 @@ type: lifecycle-map
 purpose: 用一张正式中文技术架构图解释 ACP、Subagent、Cron、CLI 等 detached work 如何创建 task record、更新状态，并通过 direct delivery 或 heartbeat wake 通知用户
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Background Tasks。左侧是 ACP/Subagent/Cron/CLI 来源，中间是 Task Registry 和 queued/running/terminal 状态机，右侧是 direct channel delivery、requester session event、heartbeat wake、tasks audit。高对比、工程化、少量标签、无 logo、无水印。
 asset_target: docs/assets/12-background-tasks-subagent-imagegen.png
-status: pending
+status: generated
 -->
+
+![12｜Background Tasks：OpenClaw 后台工作账本](../../assets/12-background-tasks-subagent-imagegen.png)
 
 ## Task 是记录，不是调度器
 

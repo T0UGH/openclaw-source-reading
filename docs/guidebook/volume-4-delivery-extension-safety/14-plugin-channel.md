@@ -71,8 +71,10 @@ type: architecture-map
 purpose: 用一张正式中文技术架构图解释 OpenClaw plugin 不只是工具，而是 provider、channel、hooks、media、search、delivery 等运行时能力平面；重点突出 Channel plugin 如何连接真实世界入口和出口
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Plugin and Channel。左侧是 Manifest/Discovery/Validation/Capability Registry，中间是 Providers、Media、Hooks、Channel Plugin，右侧是 Inbound Envelope、Session Grammar、Shared Message Tool、Outbound Adapter、真实聊天渠道。高对比、工程化、少量标签、无 logo、无水印。
 asset_target: docs/assets/14-plugin-channel-imagegen.png
-status: pending
+status: generated
 -->
+
+![14｜Plugin 与 Channel：OpenClaw 的世界入口扩展层](../../assets/14-plugin-channel-imagegen.png)
 
 ## Capability model：插件注册的是能力，不只是工具
 

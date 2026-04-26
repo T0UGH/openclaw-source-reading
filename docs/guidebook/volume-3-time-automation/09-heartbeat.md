@@ -69,8 +69,10 @@ type: lifecycle-diagram
 purpose: 用一张正式中文技术架构图解释 OpenClaw Heartbeat 如何在没有用户输入时唤醒主会话、检查事项，并用 HEARTBEAT_OK 保持安静
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Heartbeat。左侧是周期 tick、active hours、agent/session 解析；中间是 HEARTBEAT.md / prompt / main session run；右侧是 HEARTBEAT_OK 静默过滤、alert delivery。突出“没事沉默，有事提醒”。高对比、工程化、少量标签、无 logo、无水印。
 asset_target: docs/assets/09-heartbeat-imagegen.png
-status: pending
+status: generated
 -->
+
+![09｜Heartbeat：低频存在感与静默唤醒机制](../../assets/09-heartbeat-imagegen.png)
 
 ## Heartbeat 不是 Cron-lite
 

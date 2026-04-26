@@ -70,8 +70,10 @@ type: architecture
 purpose: 解释为什么 OpenClaw 的入口是长期 Gateway，而不是单次 CLI 调用
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Gateway 作为第一运行边界。左侧是多渠道消息、控制端、设备节点、Heartbeat/Cron；中间是 Gateway，标注长期进程、协议认证、事件分发；右侧是 Session Routing、Agent Run、Delivery。少字、高对比、正式技术架构图、无 logo、无水印。
 asset_target: docs/assets/03-gateway-imagegen.png
-status: pending
+status: generated
 -->
+
+![Gateway 作为第一运行边界](../../assets/03-gateway-imagegen.png)
 
 ## 第一层：Gateway 是长期进程，不是一次命令
 

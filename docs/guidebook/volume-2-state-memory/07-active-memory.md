@@ -63,8 +63,10 @@ type: mechanism-diagram
 purpose: 用一张中文技术架构图解释 Active Memory 如何在 OpenClaw 主回复前主动召回长期记忆
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Active Memory。画面从左到右展示：用户消息、before_prompt_build hook、准入门禁、blocking memory sub-agent、memory_search/memory_get、NONE 或短摘要、隐藏 untrusted context 注入、主回复生成。风格清晰、工程化、高对比，不要 logo、水印或装饰性人物插画。
 asset_target: docs/assets/07-active-memory-imagegen.png
-status: pending
+status: generated
 -->
+
+![07｜Active Memory：主回复前的 blocking memory pass](../../assets/07-active-memory-imagegen.png)
 
 ## 为什么“主 Agent 自己想起来”不够
 

@@ -81,8 +81,10 @@ type: flow
 purpose: 解释 OpenClaw 的 Agent Run 不只来自用户 prompt，而是来自多种真实世界事件
 prompt_seed: 生成一张 16:9 中文技术流程图，主题是 OpenClaw Event Sources。左侧包括用户消息、渠道事件、Heartbeat、Cron、Webhook、设备节点、CLI/Web/App；中间是 Gateway 和 Session Routing；右侧是 Main Session、Isolated Run、Delivery。少字、高对比、无 logo、无水印。
 asset_target: docs/assets/02-event-sources-imagegen.png
-status: pending
+status: generated
 -->
+
+![02｜OpenClaw Event Sources 总图](../../assets/02-event-sources-imagegen.png)
 
 ## 第一类：人发来的消息
 

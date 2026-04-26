@@ -75,8 +75,10 @@ type: lifecycle-diagram
 purpose: 用一张正式中文技术架构图解释 OpenClaw 如何在长会话压缩前保存重要上下文，并通过 Dreaming 把短期信号晋升为长期记忆
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Memory Flush and Dreaming。左侧展示长会话接近上下文阈值、flush gate、silent memory flush、compaction；右侧展示 memory/.dreams、Light、REM、Deep、DREAMS.md、MEMORY.md 晋升。突出“即时保护”和“后台整理”两个节奏。高对比、工程化、少量标签、无 logo、无水印。
 asset_target: docs/assets/08-memory-flush-dreaming-imagegen.png
-status: pending
+status: generated
 -->
+
+![08｜Memory Flush 与 Dreaming：压缩前保存与后台晋升](../../assets/08-memory-flush-dreaming-imagegen.png)
 
 ## 为什么 compaction summary 不够
 

@@ -65,8 +65,10 @@ type: pipeline-diagram
 purpose: 用一张正式中文技术架构图解释模型输出为什么不能直接等于聊天消息，以及 OpenClaw 如何通过 Reply Shaping 生成可投递 payload
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Reply Shaping。左侧是 Agent Loop 输出：assistant text、reasoning、tool sends、media、errors；中间是 reply shaping：directives、NO_REPLY、media merge、reply-to、interactive、dedupe；右侧是 outbound delivery 和 channel plugins。高对比、工程化、少量标签、无 logo、无水印。
 asset_target: docs/assets/13-reply-shaping-imagegen.png
-status: pending
+status: generated
 -->
+
+![13｜Reply Shaping：从模型输出到渠道消息](../../assets/13-reply-shaping-imagegen.png)
 
 ## Agent loop 里的输出不是一种东西
 

@@ -83,8 +83,10 @@ type: memory-map
 purpose: 解释 workspace、agentDir、sessions、memory 文件如何共同构成 OpenClaw 的长期状态
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Workspace 长期状态地图。分成 Agent Workspace 与 Agent State Dir 两块，标出 AGENTS.md、USER.md、HEARTBEAT.md、MEMORY.md、memory/YYYY-MM-DD.md、DREAMS.md、sessions、cron 状态，并连接到 Agent Run。少字、高对比、无 logo、无水印。
 asset_target: docs/assets/05-workspace-files-imagegen.png
-status: pending
+status: generated
 -->
+
+![OpenClaw Workspace 长期状态地图](../../assets/05-workspace-files-imagegen.png)
 
 ## 第一层：workspace 是默认 cwd，也承载长期材料
 

@@ -50,8 +50,10 @@ type: boundary-map
 purpose: 用一张正式技术架构图解释“OpenClaw 为什么强调 manifest-first 和 runtime lazy loading？”
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw 源码阅读第 15 篇：Control Plane vs Runtime Plane。画面分成上下两层：上层 Control Plane 包含 Manifest、Discovery、Validation、Activation Planning、Diagnostics；下层 Runtime Plane 包含 Loader、register(api)、Capability Registry、Channel/Provider/Tool/Hook/Service；用一条“按需加载”箭头连接两层。高对比、少量标签、无 logo、无水印，不要装饰性插画。
 asset_target: docs/assets/15-control-plane-runtime-plane-imagegen.png
-status: pending
+status: generated
 -->
+
+![15｜Control Plane vs Runtime Plane：为什么插件不能一上来就全加载 机制图](../../assets/15-control-plane-runtime-plane-imagegen.png)
 
 ## 源码锚点
 

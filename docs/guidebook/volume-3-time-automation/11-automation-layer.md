@@ -75,8 +75,10 @@ type: system-map
 purpose: 用一张正式中文技术架构图解释 Heartbeat、Cron、Background Tasks、Task Flow、Hooks、Standing Orders 在 OpenClaw 自动化层中的分工
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Automation Layer。中心是“Automation Need”，向外分为 Heartbeat、Cron、Background Tasks、Task Flow、Hooks、Standing Orders 六个模块，并标注各自负责：周期检查、精确调度、离线工作审计、多步骤流程、事件响应、长期规则。高对比、工程化、少量标签、无 logo、无水印。
 asset_target: docs/assets/11-automation-layer-imagegen.png
-status: pending
+status: generated
 -->
+
+![11｜Automation Layer：OpenClaw 自动化机制分工图](../../assets/11-automation-layer-imagegen.png)
 
 ## 第一类：Heartbeat，周期存在感
 

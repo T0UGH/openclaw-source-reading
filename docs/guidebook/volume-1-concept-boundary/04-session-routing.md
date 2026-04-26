@@ -57,8 +57,10 @@ type: flow
 purpose: 解释真实世界消息如何被路由成 OpenClaw 内部 session 上下文
 prompt_seed: 生成一张 16:9 中文技术流程图，主题是 OpenClaw Session Routing。左侧是真实消息来源：DM、群组、频道、cron、webhook；中间是 channel/account/peer/thread 元数据和 sessionKey；右侧是 session store、transcript、agent run。少字、高对比、无 logo、无水印。
 asset_target: docs/assets/04-session-routing-imagegen.png
-status: pending
+status: generated
 -->
+
+![Session Routing 路由键](../../assets/04-session-routing-imagegen.png)
 
 ## 源码锚点
 

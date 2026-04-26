@@ -83,8 +83,10 @@ type: architecture
 purpose: 解释 OpenClaw 的独特性来自长期运行时组合，而不是单次 agent run
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw personal AI runtime。外层是真实世界事件，中心是 Gateway/Session/Workspace/Memory/Heartbeat/Cron，右侧是 Agent Run 与 Delivery。少字、高对比、层次清楚，无 logo、无水印。
 asset_target: docs/assets/01-not-waiting-agent-imagegen.png
-status: pending
+status: generated
 -->
+
+![01｜OpenClaw 不只等输入的 Agent](../../assets/01-not-waiting-agent-imagegen.png)
 
 ## 普通 coding agent 的默认形状
 

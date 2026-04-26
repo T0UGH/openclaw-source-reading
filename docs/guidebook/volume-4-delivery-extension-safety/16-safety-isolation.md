@@ -48,8 +48,10 @@ type: boundary-map
 purpose: 用一张正式技术架构图解释“OpenClaw 的安全边界为什么比 CLI coding agent 更复杂？”
 prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw 源码阅读第 16 篇：安全与隔离。图中从左到右展示 Ingress、Gateway Auth、Operator Scope、Session Routing、Workspace/Memory、Tools/Plugins/Node/Sandbox、Approval、Delivery 八层边界，并用细红色虚线标出上下文串线、越权执行、错误投递三个风险点。高对比、无 logo、无水印，不要装饰性插画。
 asset_target: docs/assets/16-safety-isolation-imagegen.png
-status: pending
+status: generated
 -->
+
+![16｜安全与隔离：当 Agent 暴露给真实消息渠道之后 机制图](../../assets/16-safety-isolation-imagegen.png)
 
 ## 源码锚点
 
