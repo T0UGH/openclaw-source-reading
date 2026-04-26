@@ -1,68 +1,169 @@
 ---
 title: "05｜Workspace Files：OpenClaw 的长期状态放在哪里"
-status: draft-card
+status: draft
 chapter: "05"
 slug: "workspace-files"
+source_files:
+  - "~/workspace/openclaw/docs/concepts/multi-agent.md"
+  - "~/workspace/openclaw/docs/concepts/memory.md"
+  - "~/workspace/openclaw/src/agents/workspace.ts"
+  - "~/workspace/openclaw/src/memory/root-memory-files.ts"
+  - "~/workspace/openclaw/src/config/sessions/paths.ts"
 ---
 
 # 05｜Workspace Files：OpenClaw 的长期状态放在哪里
 
-> 本篇状态：章节卡片 / 正文待写。后续写作必须先重新阅读下方源码锚点，再展开机制判断。
+如果你把 OpenClaw 的 workspace 理解成 repo root，就会错过它最重要的设计。对 coding agent 来说，repo root 通常是“代码在哪里”。但对 OpenClaw 来说，workspace 更像 agent 的长期生活空间：规则、身份、用户信息、记忆、heartbeat 清单、会话痕迹和自动化状态，都会在这里或相邻的 agent state 目录里留下痕迹。
 
-## 读者问题
+这篇是从“入口与路由”转向“长期状态”的桥。前面几篇解释事件怎么进来、怎么选 session；从这一篇开始，我们要看 OpenClaw 如何让一个 agent 不只是临时回答，而是能持续记住、醒来、执行计划、整理经验。
 
-OpenClaw 的 workspace 为什么不是普通 repo root？
+## 这篇先回答什么
 
-## 本篇先给的结论
+- OpenClaw 的 workspace 为什么不是普通 repo root；
+- 哪些文件构成 agent 的长期可读状态；
+- workspace、agentDir、sessions、memory 之间怎么分工。
 
-待正文写作时补充。结论必须回到这条主线：OpenClaw 不是只等用户输入的 coding agent，而是由 Gateway、Session、Workspace、Memory、Heartbeat、Cron、Delivery 等机制组合起来的个人 AI 运行时。
+这篇先讲文件地图和边界，不深入展开 Memory、Active Memory、Dreaming；这些会在后面三篇单独处理。
 
 ## 先看一张机制图
 
-这张图先作为本篇的低分辨率机制草图，后续正文写作时需要根据源码锚点细化。
+这张图回答一个问题：OpenClaw 的长期状态到底分布在哪些层。
 
 ```mermaid
 flowchart TB
-  WS[Workspace Files] --> Base[长期事实/规则]
-  Base --> Search[Memory Search]
-  Search --> Active[Active Memory]
-  Active --> Run[Agent Run]
-  Run --> Flush[Memory Flush / Dreaming]
-  Flush --> WS
+  subgraph WS["Agent Workspace"]
+    A["AGENTS.md
+长期规则"]
+    U["USER.md / IDENTITY.md
+身份与用户信息"]
+    H["HEARTBEAT.md
+周期检查清单"]
+    M["MEMORY.md
+长期事实"]
+    D["memory/YYYY-MM-DD.md
+每日上下文"]
+    R["DREAMS.md
+记忆整理回顾"]
+  end
+
+  subgraph State["Agent State Dir"]
+    S["sessions/sessions.json
+会话索引"]
+    T["sessions/*.jsonl
+会话 transcript"]
+    C["cron/jobs*.json
+定时任务状态"]
+  end
+
+  WS --> Run["Agent Run
+启动时读取/运行时写入"]
+  State --> Run
+  Run --> WS
+  Run --> State
 ```
 
-读这张图时，先按这个顺序看：
-- 先看本篇讨论的入口或触发条件；
-- 再看它进入 OpenClaw 运行时之后由哪一层接住；
-- 最后看它如何影响长期状态、Agent Run 或真实渠道投递。
+读这张图时，建议按这个顺序看：
+- 左边 workspace 是 agent 能直接读写、能被人类维护的长期文本空间；
+- 右边 agent state dir 更偏运行时索引、transcript 和调度状态；
+- agent run 每次启动都不是从空白开始，而是从这些文件和状态里恢复语境；
+- Memory、Heartbeat、Cron 不是孤立功能，它们都依赖这个长期状态面。
 
 <!-- IMAGEGEN_PLACEHOLDER:
-title: 05｜Workspace Files：OpenClaw 的长期状态放在哪里 机制图
-type: architecture
-purpose: 用一张正式技术架构图解释“OpenClaw 的 workspace 为什么不是普通 repo root？”
-prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw 源码阅读第 05 篇：Workspace Files：OpenClaw 的长期状态放在哪里。图中只保留少量标签，突出层次、边界和主链路；高对比、无 logo、无水印，不要装饰性插画。
+title: OpenClaw Workspace 长期状态地图
+type: memory-map
+purpose: 解释 workspace、agentDir、sessions、memory 文件如何共同构成 OpenClaw 的长期状态
+prompt_seed: 生成一张 16:9 中文技术架构图，主题是 OpenClaw Workspace 长期状态地图。分成 Agent Workspace 与 Agent State Dir 两块，标出 AGENTS.md、USER.md、HEARTBEAT.md、MEMORY.md、memory/YYYY-MM-DD.md、DREAMS.md、sessions、cron 状态，并连接到 Agent Run。少字、高对比、无 logo、无水印。
 asset_target: docs/assets/05-workspace-files-imagegen.png
 status: pending
 -->
 
-## 源码锚点
+## 第一层：workspace 是默认 cwd，但不只是 cwd
 
-- `~/workspace/openclaw/README.md`
-- `~/workspace/openclaw/docs/concepts/multi-agent.md`
-- `~/workspace/openclaw/docs/concepts/memory.md`
+`docs/concepts/multi-agent.md` 里有一句很关键：每个 agent 都有自己的 workspace、state directory 和 session history。它还提醒：workspace 是默认 cwd，不是硬 sandbox；相对路径会落在 workspace 里，但绝对路径仍可能访问主机其他位置，除非启用 sandboxing。
 
-## 写作边界
+这说明 workspace 有两层含义：
 
-- 不引入无关项目叙事。
-- 不写成 Claude Code 平替；Claude Code 只作为读者迁移背景。
-- 不做目录游览；要回答读者问题。
-- 术语第一次出现时要用中文说人话。
+1. 对 agent run 来说，它是默认工作目录；
+2. 对 OpenClaw runtime 来说，它是 agent 长期材料的根目录。
 
-## 正文大纲草案
+第一层像 coding agent，第二层就明显不一样了。OpenClaw 的 workspace 不是只放代码，而是放这个 agent 如何行动、如何认识用户、如何记住事实、如何周期性醒来的材料。
 
-1. 从读者问题进入；
-2. 先给本篇结论；
-3. 对照普通 coding agent / Claude Code 心智模型的失效点；
-4. 按源码锚点解释 3-5 个机制层；
-5. 区分相邻机制边界；
-6. 留下一个能接住下一篇的 takeaway。
+## 第二层：启动文件是 agent 的长期行为面
+
+`src/agents/workspace.ts` 定义了一组默认 bootstrap 文件：
+
+- `AGENTS.md`：长期操作规则；
+- `SOUL.md`：persona / 风格材料；
+- `TOOLS.md`：工具使用说明；
+- `IDENTITY.md`：agent 自身身份；
+- `USER.md`：用户信息；
+- `HEARTBEAT.md`：heartbeat 醒来时读取的检查清单；
+- `BOOTSTRAP.md`：初始化/引导材料；
+- `MEMORY.md`：根长期记忆文件。
+
+`ensureAgentWorkspace()` 会在需要时创建这些文件；`loadWorkspaceBootstrapFiles()` 会从 workspace 里读取它们，作为 agent run 的启动材料之一。源码里还用 `openBoundaryFile` 做边界读取，并限制 bootstrap 文件大小，避免随便跨出 workspace root 或读入过大的文件。
+
+所以，这些 Markdown 文件不是“文档顺手放这里”。它们是 OpenClaw 把长期行为、身份、用户资料和记忆显式化的方式。
+
+## 第三层：Memory 是文件优先，不是隐藏状态
+
+`docs/concepts/memory.md` 的第一句话就很重要：OpenClaw 通过在 agent workspace 里写普通 Markdown 文件来记住事情，模型只会“记得”保存到磁盘的东西，没有隐藏状态。
+
+其中几个文件分工不同：
+
+- `MEMORY.md`：长期事实、偏好和决策；
+- `memory/YYYY-MM-DD.md`：每日笔记，保存短期运行上下文和观察；
+- `DREAMS.md`：dreaming sweep 和长期记忆晋升的 review 表面。
+
+`src/memory/root-memory-files.ts` 进一步把 `MEMORY.md` 作为 canonical root memory filename，并保留对旧 `memory.md` 的修复路径。这说明 OpenClaw 对根记忆文件有明确规范，而不是让 agent 随意散落状态。
+
+这也解释了为什么 workspace 是“长期生活空间”：记忆不是外部黑盒，也不只是模型缓存，而是可读、可审查、可维护的文件。
+
+## 第四层：sessions 和 agentDir 保存运行时索引
+
+workspace 放可读材料，但 OpenClaw 的长期状态不只在 workspace 里。`docs/concepts/multi-agent.md` 把 `agentDir` 定义为每个 agent 的 on-disk state directory，默认在：
+
+```text
+~/.openclaw/agents/<agentId>/agent
+```
+
+Session store 则在：
+
+```text
+~/.openclaw/agents/<agentId>/sessions/sessions.json
+~/.openclaw/agents/<agentId>/sessions/<sessionId>.jsonl
+```
+
+`src/config/sessions/paths.ts` 也把这个路径结构固化在源码里。这里要区分两类状态：
+
+- workspace 文件：更适合人类和 agent 共同维护，比如规则、身份、记忆、heartbeat 清单；
+- agent state/session 文件：更适合 runtime 管理，比如 session 索引、transcript、auth profile、调度状态。
+
+两者合起来，才是 OpenClaw 的长期状态面。
+
+## 第五层：多 agent 时，workspace 也是隔离单位
+
+多 agent 文档还强调：一个 agent 是一个 fully scoped brain，包含 workspace、agentDir、session store、auth profiles 和模型配置。不同 agent 可以拥有不同电话号码/账号、不同 persona、不同 auth/session。
+
+这对理解 workspace 很重要。它不是“某个项目目录”，而是 agent 的身份边界之一。一个家庭助理、一个工作助理、一个社交助理，应该有不同 workspace 和 session store。否则规则、记忆、凭据和会话都会混在一起。
+
+所以 workspace 在 OpenClaw 里同时承担三件事：
+
+- 行为入口：agent 启动时读哪些长期规则；
+- 记忆表面：长期事实和每日上下文写在哪里；
+- 隔离边界：多 agent 场景下，哪个 brain 拥有哪些文件和状态。
+
+## 对 Claude Code 读者的迁移点
+
+如果你习惯 Claude Code，可以先把 workspace 类比成 repo root，但要立刻补上两点：
+
+1. repo root 主要回答“代码在哪里”；
+2. OpenClaw workspace 还回答“这个 agent 是谁、认识谁、记得什么、醒来检查什么、长期如何行动”。
+
+因此，读 OpenClaw 的 workspace，不要只看路径解析。要看它如何把长期状态文件化：`AGENTS.md`、`USER.md`、`HEARTBEAT.md`、`MEMORY.md`、`memory/YYYY-MM-DD.md`、`DREAMS.md`、sessions 和 cron 状态，组成了一个个人 AI runtime 的生活空间。
+
+## 小结
+
+OpenClaw 的 workspace 不是普通 repo root，而是 agent 的长期生活空间。规则、身份、用户信息、记忆、heartbeat、session 和自动化状态都围绕它组织。
+
+下一篇开始，我们就进入这套长期状态里最重要的一组机制：Memory。先看总览，再看 Active Memory，最后看 Flush 和 Dreaming 如何防止长期运行中的上下文流失。

@@ -14,7 +14,7 @@
 
 1. ✅ 建立目录、章节文件、章节卡片与统一模板。
 2. ✅ 00-02：概念迁移、OpenClaw 独立阅读理由、Event Sources。
-3. ⏳ 03-05：Gateway、Session Routing、Workspace Files。
+3. ✅ 03-05：Gateway、Session Routing、Workspace Files。
 4. ⏳ 06-08：Memory、Active Memory、Flush & Dreaming。
 5. ⏳ 09-11：Heartbeat、Cron、Automation。
 6. ⏳ 12-14：Background/Subagent、Reply Shaping、Plugin/Channel。
