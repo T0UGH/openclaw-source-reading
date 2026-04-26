@@ -16,7 +16,7 @@
 2. ✅ 00-02：概念迁移、OpenClaw 独立阅读理由、Event Sources。
 3. ✅ 03-05：Gateway、Session Routing、Workspace Files。
 4. ✅ 06-08：Memory、Active Memory、Flush & Dreaming。
-5. ⏳ 09-11：Heartbeat、Cron、Automation。
+5. ✅ 09-11：Heartbeat、Cron、Automation。
 6. ⏳ 12-14：Background/Subagent、Reply Shaping、Plugin/Channel。
 7. ⏳ 15-16：Control Plane vs Runtime Plane、Safety。
 8. ⏳ 全书可读性教练第一轮。
