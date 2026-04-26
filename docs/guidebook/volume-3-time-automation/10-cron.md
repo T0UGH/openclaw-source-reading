@@ -11,13 +11,13 @@ slug: "cron"
 
 Cron 和 Heartbeat 的边界是什么？
 
-上一篇讲 Heartbeat：周期性醒来看看有没有事情，没事就 `HEARTBEAT_OK` 静默。Cron 则是另一条时间轴：它不是“看看”，而是“到点执行一个明确 job”。
+上一篇讲 Heartbeat：周期性醒来看看有没有事情，没事就用 `HEARTBEAT_OK` 静默。Cron 走的是另一条时间轴：它关心的不是“看看”，而是“到点执行一个明确 job”。
 
-这篇要讲的是 OpenClaw 为什么需要内建 Cron，而不是让用户自己在系统 crontab 里写脚本。
+这篇要回答的是：OpenClaw 为什么需要内建 Cron，而不是让用户自己在系统 crontab 里写脚本。
 
 ## 本篇结论
 
-OpenClaw 的 Cron 是 Gateway 内建 scheduler。它负责持久化 job definition、在正确时间唤醒 Agent、选择 main / isolated / current / custom session、记录 background task、并把结果投递到 chat channel 或 webhook。
+OpenClaw 的 Cron 是 Gateway 内建 scheduler。它负责持久化 job definition，在正确时间唤醒 Agent，选择 main / isolated / current / custom session，记录 background task，并把结果投递到 chat channel 或 webhook。
 
 它和 Heartbeat 的边界可以压成一句话：
 
@@ -63,7 +63,7 @@ flowchart TD
   Result --> Log["run log / task ledger"]
 ```
 
-这张图里有三个关键点：Cron 运行在 Gateway，不在模型里；job definition 和 runtime state 分开；执行结果不是简单打印，而是进入 delivery 和 task/run log。
+这张图里有三个要点：Cron 运行在 Gateway，不在模型里；job definition 和 runtime state 分开保存；执行结果不会简单打印，而会进入 delivery 和 task/run log。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 10｜Cron：Gateway 内建调度、隔离执行与结果投递
@@ -76,9 +76,9 @@ status: pending
 
 ## Cron 为什么必须在 Gateway 里
 
-如果只是“定时执行命令”，操作系统 crontab 当然也能做。但 OpenClaw 的 Cron 要调度的不是 shell 命令，而是个人 AI runtime 里的 agent work。
+如果只是“定时执行命令”，操作系统 crontab 当然能做。但 OpenClaw 的 Cron 要调度的不是 shell 命令，它调度的是个人 AI runtime 里的 agent work。
 
-这意味着它必须知道：
+这会带来一个结果它必须知道：
 
 - 当前有哪些 agent；
 - job 应该进入哪个 session；
@@ -94,7 +94,7 @@ status: pending
 
 ## jobs.json 与 jobs-state.json：定义和运行态分开
 
-Cron 有两个关键持久化文件：
+Cron 有两个持久化文件：
 
 - `~/.openclaw/cron/jobs.json`：job definitions；
 - `~/.openclaw/cron/jobs-state.json`：runtime execution state。
@@ -103,7 +103,7 @@ Cron 有两个关键持久化文件：
 
 文档也提醒：如果你用 git 跟踪 cron definitions，应该 track `jobs.json`，gitignore `jobs-state.json`。
 
-这和前面 Memory 的设计有相似之处：OpenClaw 很重视把 durable intent 和 runtime state 分开。
+这和前面 Memory 的设计相通：OpenClaw 很重视把 durable intent 和 runtime state 分开。
 
 ## 三种 schedule：at / every / cron
 
@@ -115,17 +115,17 @@ OpenClaw Cron 支持三种时间表达：
 | `every` | 固定间隔，比如每 2 小时检查一次 |
 | `cron` | cron expression，适合每天 9 点、每周一 6 点这类日历型调度 |
 
-这里要注意两个细节。
+这里有两个细节需要注意。
 
 第一，没有 timezone 的 timestamp 会按 UTC 处理；本地墙钟时间应该用 `--tz`。
 
 第二，top-of-hour recurring expressions 会自动 stagger，避免很多任务同一秒集中冲击系统。需要精确触发时用 `--exact`。
 
-这说明 OpenClaw 的 Cron 不是裸 croner 包装，而是在真实长期运行里考虑了负载、时区和精确性的 trade-off。
+这说明 OpenClaw 的 Cron 不是裸 croner 包装。它在长期运行场景里处理了负载、时区和精确性之间的取舍。
 
 ## 四种 execution style：main / isolated / current / custom
 
-Cron 真正有意思的地方在 execution style。
+Cron 更有意思的地方在 execution style。
 
 | Style | 含义 | 适合什么 |
 | --- | --- | --- |
@@ -134,9 +134,9 @@ Cron 真正有意思的地方在 execution style。
 | Current session | 创建时绑定当前 session | 与当前对话上下文强相关的 recurring work |
 | Custom session | 持久命名 session | 需要跨多次 run 积累历史的流程 |
 
-Main session job 更像“把一个事件放进主会话时间线”。Isolated job 则是“另开一个专用执行空间”。这就是 Cron 和 Heartbeat 的关键差异：Cron 可以明确选择执行空间，而 Heartbeat 默认是周期性主会话 turn。
+Main session job 更像“把一个事件放进主会话时间线”。Isolated job 则是“另开一个专用执行空间”。这也是 Cron 和 Heartbeat 的重要差异：Cron 可以明确选择执行空间，而 Heartbeat 默认是周期性主会话 turn。
 
-文档还强调：所有 cron executions 都会创建 background task records。这让 Cron 不是黑盒定时器，而是可审计的后台工作。
+文档还强调：所有 cron executions 都会创建 background task records。这样一来，Cron 就不再是黑盒定时器，而是一项可审计的后台工作。
 
 ## Isolated run：为什么 fresh session 很重要
 
@@ -144,9 +144,9 @@ Main session job 更像“把一个事件放进主会话时间线”。Isolated 
 
 Isolated cron 的语义就是 fresh session。它可能携带安全偏好、模型选择、显式 override，但不会继承旧 cron row 的 ambient conversation context：channel/group routing、send/queue policy、elevation、origin、ACP runtime binding 等都不应该乱带。
 
-这让 Cron 能承载更严肃的后台工作。对 OpenClaw 来说，隔离不是安全附件，而是自动化可靠性的基础。
+这让 Cron 能承载更严肃的后台工作。对 OpenClaw 来说，隔离不是附加安全项，而是自动化可靠性的基础条件。
 
-## Delivery：结果不是只存在日志里
+## Delivery：结果不只存在日志里
 
 Cron 的输出有三种 delivery mode：
 
@@ -178,7 +178,7 @@ Cron 的输出有三种 delivery mode：
 
 `src/agents/tools/cron-tool.ts` 说明 Cron 不只是 CLI 功能，Agent 也能通过 tool 创建、更新、运行、删除 cron jobs。
 
-这对个人 AI runtime 很关键。用户可以说“明天 9 点提醒我”或“每周一早上给我一份总结”，Agent 不应该只回答“好的”，而应该把这个承诺落成 Gateway scheduler 里的持久 job。
+这对个人 AI runtime 很重要。用户可以理解为“明天 9 点提醒我”或“每周一早上给我一份总结”，Agent 不应该只回答“好的”，还应该把这个承诺落成 Gateway scheduler 里的持久 job。
 
 工具 schema 里显式暴露了 schedule、payload、delivery、sessionTarget、failureAlert 等字段，说明 Agent 创建 cron job 时必须把“时间、执行方式、输出方式、失败处理”都结构化下来。
 

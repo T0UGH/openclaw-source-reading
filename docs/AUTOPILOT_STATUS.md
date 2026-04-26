@@ -19,7 +19,7 @@
 5. ✅ 09-11：Heartbeat、Cron、Automation。
 6. ✅ 12-14：Background/Subagent、Reply Shaping、Plugin/Channel。
 7. ✅ 15-16：Control Plane vs Runtime Plane、Safety。
-8. ⏳ 全书可读性教练第一轮。
+8. ✅ 全书可读性教练第一轮。
 9. ⏳ Mermaid 与 IMAGEGEN_PLACEHOLDER 验收。
 10. ⏳ 源码锚点复核。
 11. ⏳ README、目录页、发布入口整理。

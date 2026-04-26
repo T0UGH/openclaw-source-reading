@@ -13,7 +13,7 @@ slug: "memory-flush-dreaming"
 
 这是所有长期 Agent 都绕不开的问题：上下文窗口有限，session 越跑越长，系统迟早要压缩、摘要、截断。普通做法是把历史对话压成一段 summary。但 summary 有一个风险：它会保留“看起来重要”的任务线索，却可能丢掉那些以后才会变重要的用户偏好、项目决定、长期事实。
 
-OpenClaw 的处理方式不是只依赖 compaction summary，而是在 compaction 前后加了两类 memory lifecycle 机制：
+OpenClaw 没有只依赖 compaction summary。它在 compaction 前后加了两类 memory lifecycle 机制：
 
 - **Memory Flush**：压缩前的静默保存机会；
 - **Dreaming**：后台整理、评分、晋升短期信号的慢机制。
@@ -87,7 +87,7 @@ Memory 要回答的是：哪些事实以后还值得反复使用？
 这两者会重叠，但不等价。比如：
 
 - 用户临时让你改一个文件，这对当前任务重要，但未必值得长期记；
-- 用户纠正一个偏好，这对当前任务也许只是顺手一句，但未来很重要；
+- 用户纠正一个偏好，这对当前任务也许只是顺手一句，但未来还会用到；
 - 项目里形成一个稳定约定，summary 可能压得很短，但 memory 应该保留得更明确。
 
 所以，如果只靠 compaction，长期记忆会被“当前任务推进”绑架。OpenClaw 用 Memory Flush 在压缩前单独问一次：有没有该写进 memory files 的东西？
@@ -96,7 +96,7 @@ Memory 要回答的是：哪些事实以后还值得反复使用？
 
 `docs/concepts/memory.md` 说 Automatic memory flush 默认开启：在 compaction 总结对话前，OpenClaw 会跑一个 silent turn，提醒 Agent 把重要上下文保存到 memory files。
 
-`src/plugins/memory-state.ts` 中的 `MemoryFlushPlan` 说明 flush 不是随便拼一段 prompt，而是由 memory plugin capability 提供计划：
+`src/plugins/memory-state.ts` 中的 `MemoryFlushPlan` 说明，flush 不是随便拼一段 prompt；它的计划来自 memory plugin capability：
 
 ```ts
 export type MemoryFlushPlan = {
@@ -158,7 +158,7 @@ Dreaming 的输出分两类：
 
 长期晋升仍然只写 `MEMORY.md`。
 
-这个分离很重要：机器可以积累候选、信号、检查点；人类可以在 `DREAMS.md` 看见发生了什么；长期事实只由 Deep phase 严格晋升。
+这种分离让职责更清楚：机器可以积累候选、信号、检查点；人类可以在 `DREAMS.md` 看见发生了什么；长期事实只由 Deep phase 严格晋升。
 
 ## Light / REM / Deep：三种睡眠不是三个按钮
 
@@ -187,7 +187,7 @@ Deep phase 的 ranking signals 包括：
 
 它还要求候选通过 `minScore`、`minRecallCount`、`minUniqueQueries` 等门槛。
 
-这说明 Dreaming 的设计目标不是“尽可能多记”，而是“让长期记忆保持高信噪比”。对个人 AI runtime 来说，忘掉一些低价值短期碎片，比把所有东西都塞进 `MEMORY.md` 更健康。
+这说明 Dreaming 追求的不是“尽可能多记”，它更在意长期记忆的高信噪比。对个人 AI runtime 来说，丢掉一些低价值短期碎片，比把所有东西都塞进 `MEMORY.md` 更健康。
 
 ## Dream Diary：给人看的审阅表面
 
@@ -195,13 +195,13 @@ Dreaming 还会维护 `DREAMS.md` 里的 narrative Dream Diary。文档说，mem
 
 但这个 diary 不是 promotion source。Dreaming-generated diary/report artifacts 会被排除在 short-term promotion 之外，只有 grounded memory snippets 才有资格晋升到 `MEMORY.md`。
 
-这个边界很重要：`DREAMS.md` 是审阅表面，不是事实来源本身。它让用户知道系统在整理什么、为什么整理，但不会让“系统自己的反思文本”直接循环变成长期事实。
+这个边界要写清楚：`DREAMS.md` 是审阅表面，不是事实来源本身。它让用户知道系统在整理什么、为什么整理，但不会让“系统自己的反思文本”直接循环变成长期事实。
 
 ## Grounded backfill：历史材料也要可回放、可回滚
 
 `docs/concepts/memory.md` 还提到 grounded backfill：它可以读取历史 `memory/YYYY-MM-DD.md` notes，生成结构化 review output 写入 `DREAMS.md`，也可以把 grounded durable candidates stage 到 short-term dreaming store。
 
-关键点是：grounded backfill 不直接提升到 `MEMORY.md`。如果使用：
+这里的边界是：grounded backfill 不直接提升到 `MEMORY.md`。如果使用：
 
 ```bash
 openclaw memory rem-backfill --path ./memory --stage-short-term

@@ -11,17 +11,17 @@ slug: "plugin-channel"
 
 OpenClaw plugin 和普通 coding agent extension 有什么不同？
 
-在很多 coding agent 里，extension 基本等同于“多一个工具”：给模型一个新函数，模型需要时调用它。这个心智模型用在 OpenClaw 上会失真。
+在很多 coding agent 里，extension 基本等于“多一个工具”：给模型一个新函数，模型需要时调用它。这个理解放到 OpenClaw 上会偏掉。
 
-OpenClaw 的 plugin 不只是工具扩展。它可以提供模型 provider、CLI backend、speech、realtime transcription、media understanding、image/music/video generation、web fetch/search、channel / messaging、gateway discovery、hooks、services、routes、memory 等能力。尤其是 Channel plugin，它不是“发消息工具”，而是把一个真实沟通平台接入 OpenClaw 运行时。
+OpenClaw 的 plugin 覆盖的范围远大于工具扩展。它可以提供模型 provider、CLI backend、speech、realtime transcription、media understanding、image/music/video generation、web fetch/search、channel / messaging、gateway discovery、hooks、services、routes、memory 等能力。尤其是 Channel plugin，它负责把一个真实沟通平台接入 OpenClaw 运行时，并不只是发消息。
 
 ## 本篇结论
 
 OpenClaw plugin 是运行时能力平面，不是单纯 tool list。它通过 manifest / discovery / enablement / validation / runtime registration，把外部世界的能力接入 Gateway、Agent loop、Message tool、Delivery、Hooks 和 Setup。
 
-Channel plugin 则是一类特殊 plugin：它负责把 Telegram、Discord、Slack、Matrix、WhatsApp、Teams 等真实渠道变成 OpenClaw 的事件入口和结果出口，包括账号、DM 安全、pairing、session grammar、threading、outbound、typing、approval surface 等。
+Channel plugin 是其中一类特殊 plugin：它负责把 Telegram、Discord、Slack、Matrix、WhatsApp、Teams 等真实渠道变成 OpenClaw 的事件入口和结果出口，涉及账号、DM 安全、pairing、session grammar、threading、outbound、typing、approval surface 等。
 
-一句话：**普通 agent extension 多半是“模型能调用什么”；OpenClaw plugin 更像“运行时如何接入一个新世界”。**
+一句话：**普通 agent extension 多半关心“模型能调用什么”；OpenClaw plugin 更关心“运行时怎样接入一个新世界”。**
 
 ## 源码锚点
 
@@ -63,7 +63,7 @@ flowchart TB
   Outbound --> World["Real-world channel"]
 ```
 
-这张图里，plugin 不是 agent loop 末端的一个函数，而是从 discovery 到 runtime surface，再到 inbound/outbound 的能力接入层。
+图里，plugin 位于 agent loop 之前和之外：它从 discovery 延伸到 runtime surface，再延伸到 inbound/outbound，是一层能力接入机制。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 14｜Plugin 与 Channel：OpenClaw 的世界入口扩展层
@@ -78,9 +78,9 @@ status: pending
 
 `docs/plugins/architecture.md` 的 public capability model 列出了一张表：Text inference、CLI inference backend、Speech、Realtime transcription、Realtime voice、Media understanding、Image generation、Music generation、Video generation、Web fetch、Web search、Channel / messaging、Gateway discovery。
 
-这已经说明 OpenClaw plugin 的尺度：它接入的是运行时能力。一个 OpenAI plugin 可能同时拥有 text inference、speech、media understanding、image generation；一个 channel plugin 则让 OpenClaw 进入一个聊天平台。
+这已经能看出 OpenClaw plugin 的尺度：它接入的是运行时能力。一个 OpenAI plugin 可能同时拥有 text inference、speech、media understanding、image generation；一个 channel plugin 则让 OpenClaw 进入一个聊天平台。
 
-这和“给模型加一个函数”完全不是一个层级。
+这和“给模型加一个函数”不是同一个层级。
 
 ## Plugin shapes：OpenClaw 关心插件实际注册了什么
 
@@ -93,7 +93,7 @@ OpenClaw 会按实际 registration behavior 把 plugin 分成几类：
 | `hook-only` | 只注册 hooks，没有 capabilities/tools/commands/services |
 | `non-capability` | 注册 tools、commands、services、routes，但没有 capability |
 
-这里的重点是“实际注册行为”，不是只看静态 metadata。OpenClaw 要知道 plugin 到底扩展了运行时哪一块，才能做诊断、加载规划和兼容提示。
+这里看的是“实际注册行为”，而不是静态 metadata。OpenClaw 要知道 plugin 到底扩展了运行时哪一块，才能做诊断、加载规划和兼容提示。
 
 ## 四层加载管线：control plane 先于 runtime
 
@@ -104,21 +104,21 @@ plugin architecture 文档把加载管线拆成四层：
 3. **Runtime loading**：native plugin 通过 `register(api)` 把 capabilities 注册进 central registry；兼容 bundle 可以先归一化 registry record，而不导入 runtime code；
 4. **Surface consumption**：OpenClaw 读取 registry，暴露 tools、channels、provider setup、hooks、HTTP routes、CLI commands、services。
 
-这说明 OpenClaw 明确区分 control plane 和 runtime plane。manifest / schema / setup / diagnostics 应尽量不启动重 runtime；真正行为由 full registration path 激活。
+这说明 OpenClaw 明确区分 control plane 和 runtime plane。manifest / schema / setup / diagnostics 应尽量不启动重 runtime；实际行为由 full registration path 激活。
 
-这个设计对长期运行时很关键：Gateway 启动、status、doctor、setup、UI schema 都不能因为看一眼 plugin 就把所有客户端、socket、listener、subprocess 全部启动。
+这个设计对长期运行时很重要：Gateway 启动、status、doctor、setup、UI schema 都不能因为看一眼 plugin，就把所有客户端、socket、listener、subprocess 全部启动。
 
 ## Activation planning：需要什么才加载什么
 
-文档里还有 activation planning：调用方可以在具体 command、provider、channel、route、agent harness、capability 场景下，先问“哪些 plugin 相关”，再决定加载更大的 runtime registry。
+文档里还有 activation planning：调用方可以在具体 command、provider、channel、route、agent harness、capability 场景下，先问“哪些 plugin 相关”，再决定是否加载更大的 runtime registry。
 
-这不是性能洁癖，而是 Gateway 热路径的稳定性要求。聊天入口、status 命令、setup 表单、message tool schema 都可能频繁发生。如果每次都加载所有 channel/provider runtime，系统会慢，也更容易引入副作用。
+这不是性能洁癖。对 Gateway 的热路径来说，稳定性本来就是硬要求。聊天入口、status 命令、setup 表单、message tool schema 都可能频繁发生。如果每次都加载所有 channel/provider runtime，系统会慢，也更容易引入副作用。
 
 所以 OpenClaw 的插件系统是 manifest-first、lazy runtime loading，而不是“启动时全量 require 所有扩展”。
 
 ## Channel plugin：不需要每个平台都发明一个 send 工具
 
-Channel plugin 最重要的设计边界是：OpenClaw core 保留一个共享 `message` tool，channel plugin 不需要注册独立的 send/edit/react 工具。
+Channel plugin 重要的设计边界是：OpenClaw core 保留一个共享 `message` tool，channel plugin 不需要注册独立的 send/edit/react 工具。
 
 `docs/plugins/architecture.md` 和 `docs/plugins/sdk-channel-plugins.md` 都强调这点：
 
@@ -127,15 +127,15 @@ Channel plugin 最重要的设计边界是：OpenClaw core 保留一个共享 `m
 - channel plugins own provider-specific session conversation grammar；
 - channel plugins execute final action through their action adapter。
 
-这能避免工具爆炸。否则每接入一个平台，模型 prompt 里就多一堆 `telegram_send`、`discord_reply`、`slack_react`，既难学也难维护。OpenClaw 让模型面对共享 message tool，而让 channel plugin 在背后决定这个 channel 能做什么。
+这样可以避免工具爆炸。否则每接入一个平台，模型 prompt 里就多一堆 `telegram_send`、`discord_reply`、`slack_react`，既难学也难维护。OpenClaw 让模型面对共享 message tool，channel plugin 则在背后决定这个 channel 能做什么。
 
 ## Session grammar：真实平台的 conversation 不是一个字符串
 
 Channel plugin 还负责 session grammar：provider-specific conversation ids 如何映射成 base chat、thread id、parent fallback。
 
-这件事非常现实。Telegram 有 topic，Discord 有 channel/thread，Slack 有 team/channel/thread_ts，Matrix 有 room，WhatsApp 有 direct/group。OpenClaw 不能把所有平台都硬编码进 core，也不能把这些差异丢给模型猜。
+这件事很现实。Telegram 有 topic，Discord 有 channel/thread，Slack 有 team/channel/thread_ts，Matrix 有 room，WhatsApp 有 direct/group。OpenClaw 不能把所有平台都硬编码进 core，也不能把这些差异丢给模型猜。
 
-因此 channel plugin 通过 `messaging.resolveSessionConversation(...)` 等接口告诉 core：raw conversation id 应该如何拆解、父 conversation 候选是什么、thread 如何继承。
+因此，channel plugin 通过 `messaging.resolveSessionConversation(...)` 等接口告诉 core：raw conversation id 应该如何拆解、父 conversation 候选是什么、thread 如何继承。
 
 这也是 session routing 能跨渠道成立的前提。
 
@@ -154,15 +154,15 @@ Channel plugin 还要处理 DM policy、allowlist、pairing、approvals、native
 - native approval payload 如何发送、更新、过期；
 - thread / topic routing 如何保留。
 
-这让 Channel plugin 成为 OpenClaw 安全边界的一部分，而不是简单的 transport adapter。
+这让 Channel plugin 成为 OpenClaw 安全边界的一部分，而不只是 transport adapter。
 
 ## Outbound media：插件声明参数，core 做通用保护
 
 `docs/plugins/sdk-channel-plugins.md` 还提到，如果 channel 的 message-tool 参数携带 media source，比如本地路径或远程 media URL，plugin 应通过 `describeMessageTool(...).mediaSourceParams` 显式声明这些参数。
 
-Core 之后用这份声明做 sandbox path normalization 和 outbound media-access hints，而不需要硬编码每个平台的 `avatarPath`、`attachmentUrl`、`coverImage`。
+Core 之后用这份声明做 sandbox path normalization 和 outbound media-access hints，不需要硬编码每个平台的 `avatarPath`、`attachmentUrl`、`coverImage`。
 
-这体现了 OpenClaw 的一个稳定设计模式：平台知识留在插件，通用安全/归一化策略留在 core。
+这里体现了 OpenClaw 的一个稳定分工：平台知识留在插件，通用安全/归一化策略留在 core。
 
 ## Plugin 和 Reply Shaping 的接缝
 
@@ -175,7 +175,7 @@ Reply Shaping：决定“应该发什么 payload”。
 Channel Plugin：决定“这个 payload 在该平台怎么发”。
 ```
 
-前者是渠道无关的整形；后者是渠道有关注入真实世界。
+前者做渠道无关的整形；后者把渠道细节接回真实世界。
 
 ## 为什么这不是普通 extension
 
@@ -203,4 +203,4 @@ OpenClaw plugin 要回答的问题更多：
 
 ## Takeaway
 
-OpenClaw 的 plugin 系统不是“给模型多装几个工具”，而是把外部世界的能力以可发现、可验证、可懒加载、可诊断的方式接入运行时。Channel plugin 更进一步：它把真实聊天平台变成事件入口、会话边界、权限边界和结果出口。
+OpenClaw 的 plugin 系统要做的，是把外部世界的能力以可发现、可验证、可懒加载、可诊断的方式接入运行时，而不只是“给模型多装几个工具”。Channel plugin 更进一步：它把真实聊天平台变成事件入口、会话边界、权限边界和结果出口。

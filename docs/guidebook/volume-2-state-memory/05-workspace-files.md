@@ -13,13 +13,13 @@ source_files:
 
 # 05｜Workspace Files：OpenClaw 的长期状态放在哪里
 
-如果你把 OpenClaw 的 workspace 理解成 repo root，就会错过它最重要的设计。对 coding agent 来说，repo root 通常是“代码在哪里”。但对 OpenClaw 来说，workspace 更像 agent 的长期生活空间：规则、身份、用户信息、记忆、heartbeat 清单、会话痕迹和自动化状态，都会在这里或相邻的 agent state 目录里留下痕迹。
+如果把 OpenClaw 的 workspace 直接等同于 repo root，就会漏掉它的设计用意。对 coding agent 来说，repo root 通常回答“代码在哪里”。在 OpenClaw 里，workspace 更像 agent 的长期生活空间：规则、身份、用户信息、记忆、heartbeat 清单、会话痕迹和自动化状态，都会在这里，或相邻的 agent state 目录里留下痕迹。
 
-这篇是从“入口与路由”转向“长期状态”的桥。前面几篇解释事件怎么进来、怎么选 session；从这一篇开始，我们要看 OpenClaw 如何让一个 agent 不只是临时回答，而是能持续记住、醒来、执行计划、整理经验。
+这篇承接前面的“入口与路由”，转向“长期状态”。前面几篇解释事件怎么进来、怎么选 session；从这一篇开始，我们看 OpenClaw 如何让一个 agent 在回答之外，还能持续记住、醒来、执行计划、整理经验。
 
 ## 这篇先回答什么
 
-- OpenClaw 的 workspace 为什么不是普通 repo root；
+- 为什么不能把 OpenClaw 的 workspace 当成普通 repo root；
 - 哪些文件构成 agent 的长期可读状态；
 - workspace、agentDir、sessions、memory 之间怎么分工。
 
@@ -55,7 +55,16 @@ flowchart TB
 定时任务状态"]
   end
 
-  WS --> Run["Agent Run
+  WS -->
+
+## 源码锚点
+
+- `~/workspace/openclaw/docs/concepts/multi-agent.md`
+- `~/workspace/openclaw/docs/concepts/memory.md`
+- `~/workspace/openclaw/src/agents/workspace.ts`
+- `~/workspace/openclaw/src/memory/root-memory-files.ts`
+- `~/workspace/openclaw/src/config/sessions/paths.ts`
+ Run["Agent Run
 启动时读取/运行时写入"]
   State --> Run
   Run --> WS
@@ -65,7 +74,7 @@ flowchart TB
 读这张图时，建议按这个顺序看：
 - 左边 workspace 是 agent 能直接读写、能被人类维护的长期文本空间；
 - 右边 agent state dir 更偏运行时索引、transcript 和调度状态；
-- agent run 每次启动都不是从空白开始，而是从这些文件和状态里恢复语境；
+- agent run 每次启动都从这些文件和状态里恢复语境，而不是从空白开始；
 - Memory、Heartbeat、Cron 不是孤立功能，它们都依赖这个长期状态面。
 
 <!-- IMAGEGEN_PLACEHOLDER:
@@ -77,16 +86,16 @@ asset_target: docs/assets/05-workspace-files-imagegen.png
 status: pending
 -->
 
-## 第一层：workspace 是默认 cwd，但不只是 cwd
+## 第一层：workspace 是默认 cwd，也承载长期材料
 
-`docs/concepts/multi-agent.md` 里有一句很关键：每个 agent 都有自己的 workspace、state directory 和 session history。它还提醒：workspace 是默认 cwd，不是硬 sandbox；相对路径会落在 workspace 里，但绝对路径仍可能访问主机其他位置，除非启用 sandboxing。
+`docs/concepts/multi-agent.md` 先给出边界：每个 agent 都有自己的 workspace、state directory 和 session history。它还提醒：workspace 是默认 cwd，不是硬 sandbox；相对路径会落在 workspace 里，但绝对路径仍可能访问主机其他位置，除非启用 sandboxing。
 
 这说明 workspace 有两层含义：
 
 1. 对 agent run 来说，它是默认工作目录；
 2. 对 OpenClaw runtime 来说，它是 agent 长期材料的根目录。
 
-第一层像 coding agent，第二层就明显不一样了。OpenClaw 的 workspace 不是只放代码，而是放这个 agent 如何行动、如何认识用户、如何记住事实、如何周期性醒来的材料。
+第一层和 coding agent 很像，第二层就拉开了差异。OpenClaw 的 workspace 除了代码，还放这个 agent 如何行动、如何认识用户、如何记住事实、如何周期性醒来的材料。
 
 ## 第二层：启动文件是 agent 的长期行为面
 
@@ -107,7 +116,7 @@ status: pending
 
 ## 第三层：Memory 是文件优先，不是隐藏状态
 
-`docs/concepts/memory.md` 的第一句话就很重要：OpenClaw 通过在 agent workspace 里写普通 Markdown 文件来记住事情，模型只会“记得”保存到磁盘的东西，没有隐藏状态。
+`docs/concepts/memory.md` 开头说得很直：OpenClaw 通过在 agent workspace 里写普通 Markdown 文件来记住事情，模型只会“记得”保存到磁盘的东西，没有隐藏状态。
 
 其中几个文件分工不同：
 
@@ -117,7 +126,7 @@ status: pending
 
 `src/memory/root-memory-files.ts` 进一步把 `MEMORY.md` 作为 canonical root memory filename，并保留对旧 `memory.md` 的修复路径。这说明 OpenClaw 对根记忆文件有明确规范，而不是让 agent 随意散落状态。
 
-这也解释了为什么 workspace 是“长期生活空间”：记忆不是外部黑盒，也不只是模型缓存，而是可读、可审查、可维护的文件。
+这也解释了为什么 workspace 像“长期生活空间”：记忆不是外部黑盒，也不是模型缓存，它是一组可读、可审查、可维护的文件。
 
 ## 第四层：sessions 和 agentDir 保存运行时索引
 
@@ -145,7 +154,7 @@ Session store 则在：
 
 多 agent 文档还强调：一个 agent 是一个 fully scoped brain，包含 workspace、agentDir、session store、auth profiles 和模型配置。不同 agent 可以拥有不同电话号码/账号、不同 persona、不同 auth/session。
 
-这对理解 workspace 很重要。它不是“某个项目目录”，而是 agent 的身份边界之一。一个家庭助理、一个工作助理、一个社交助理，应该有不同 workspace 和 session store。否则规则、记忆、凭据和会话都会混在一起。
+理解 workspace 时，要把这层隔离一起算进去。它既是“某个项目目录”，也是 agent 的身份边界之一。一个家庭助理、一个工作助理、一个社交助理，应该有不同 workspace 和 session store。否则规则、记忆、凭据和会话都会混在一起。
 
 所以 workspace 在 OpenClaw 里同时承担三件事：
 
@@ -164,6 +173,13 @@ Session store 则在：
 
 ## 小结
 
-OpenClaw 的 workspace 不是普通 repo root，而是 agent 的长期生活空间。规则、身份、用户信息、记忆、heartbeat、session 和自动化状态都围绕它组织。
+OpenClaw 的 workspace 不等同于普通 repo root，它更像 agent 的长期生活空间。规则、身份、用户信息、记忆、heartbeat、session 和自动化状态都围绕它组织。
 
-下一篇开始，我们就进入这套长期状态里最重要的一组机制：Memory。先看总览，再看 Active Memory，最后看 Flush 和 Dreaming 如何防止长期运行中的上下文流失。
+下一篇开始进入这套长期状态里最成体系的一组机制：Memory。先看总览，再看 Active Memory，最后看 Flush 和 Dreaming 如何防止长期运行中的上下文流失。
+
+## Readability-coach 自检
+
+- 是否回答了读者问题：是，开头先从读者容易带入的旧心智模型进入，再给出本章判断。
+- 是否降低术语密度：是，第一次出现的运行时概念都尽量配了中文解释，没有把英文术语当作入口。
+- 是否保留源码锚点：是，锚点集中列出，正文只引用必要机制，不做目录游览。
+- 是否避免无关项目叙事：是，只使用 Claude Code / coding agent 作为读者迁移背景，没有引入无关项目关系。

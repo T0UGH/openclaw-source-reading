@@ -9,7 +9,7 @@ slug: "safety-isolation"
 
 在终端里跑一个 coding agent，安全问题通常会被简化成两件事：它能不能读写这个仓库，它能不能执行这条命令。
 
-OpenClaw 的边界更复杂。因为它不是只面对一个终端用户，而是把 Agent 暴露给真实消息渠道、Gateway 控制端、设备节点、cron、heartbeat、webhook、插件、记忆、投递和后台任务。消息从哪里来、属于哪个 session、能不能唤醒 agent、能不能触发工具、能不能写入记忆、结果投递到哪里，都会变成安全问题。
+OpenClaw 的边界更复杂。它面对的不只是一个终端用户，还包括真实消息渠道、Gateway 控制端、设备节点、cron、heartbeat、webhook、插件、记忆、投递和后台任务。消息从哪里来、属于哪个 session、能不能唤醒 agent、能不能触发工具、能不能写入记忆、结果投递到哪里，都会变成安全问题。
 
 ## 读者问题
 
@@ -17,7 +17,7 @@ OpenClaw 的安全边界为什么比 CLI coding agent 更复杂？
 
 ## 本篇先给结论
 
-OpenClaw 的安全不是单点权限开关，而是一组横跨 ingress、身份、session、workspace、memory、tool/runtime、node、plugin、delivery 的运行时边界。CLI agent 的默认假设是“当前终端用户就是操作者”；OpenClaw 的默认场景则是“外部事件进入一个长期运行的个人 AI runtime”。因此安全必须从消息入口开始，而不是等到 `exec` 前才开始。
+OpenClaw 的安全不是单点权限开关，而是一组横跨 ingress、身份、session、workspace、memory、tool/runtime、node、plugin、delivery 的运行时边界。CLI agent 默认把“当前终端用户”视为操作者；OpenClaw 默认面对“外部事件进入一个长期运行的个人 AI runtime”。因此，安全要从消息入口开始，不能等到 `exec` 前才开始。
 
 ## 先看一张机制图
 
@@ -40,7 +40,7 @@ channel / thread / requester]
   Delivery -.路由错误.-> Misdeliver[投递到错误对象]
 ```
 
-这张图的重点不是“某一层最安全”，而是每一层都在缩小后续层的风险半径。只在最后一层拦命令，已经太晚。
+这张图想表达的不是“哪一层最安全”。重点在于，每一层都在缩小后续层的风险半径。只在最后一层拦命令，已经太晚。
 
 <!-- IMAGEGEN_PLACEHOLDER:
 title: 16｜安全与隔离：当 Agent 暴露给真实消息渠道之后 机制图
@@ -69,7 +69,7 @@ status: pending
 
 `docs/concepts/architecture.md` 对 Gateway 的描述很明确：一个长期运行的 Gateway 拥有消息表面，控制端、CLI、Web UI、automation 和节点都通过 WebSocket 连接；第一帧必须是 `connect`；帧要过 JSON Schema；side-effecting methods 需要 idempotency key；节点要带 `role: "node"`、能力和权限。
 
-这和 CLI agent 的差别很大。CLI agent 的入口通常就是本地 stdin，操作者身份来自当前 shell。OpenClaw 的入口可能是 Telegram、Slack、Discord、WebChat、设备节点、cron、webhook 或控制 UI。入口一多，安全问题就提前到了 Gateway：
+这和 CLI agent 的差别很大。CLI agent 的入口通常是本地 stdin，操作者身份来自当前 shell。OpenClaw 的入口可能是 Telegram、Slack、Discord、WebChat、设备节点、cron、webhook 或控制 UI。入口一多，安全问题就提前到了 Gateway：
 
 - 连接是否经过 token/password 或可信代理模式；
 - 设备是否已经 pairing；
@@ -85,7 +85,7 @@ status: pending
 
 `docs/concepts/session.md` 有一个很重要的警告：如果多个人能给 agent 发 DM，而你仍然使用默认共享 DM session，那么 Alice 的私聊上下文可能会被 Bob 看见。修复方式是把 `session.dmScope` 设置成 `per-channel-peer`，或者多账号场景下用 `per-account-channel-peer`。
 
-这说明 OpenClaw 的安全有一类不是命令执行风险，而是**上下文串线风险**。真实渠道里，一个“会话”不是天然等于一个终端窗口。它可能来自：
+这说明 OpenClaw 还要处理一类**上下文串线风险**，它和命令执行风险不同。真实渠道里，一个“会话”并不天然等于一个终端窗口。它可能来自：
 
 - 单聊；
 - 群聊；
@@ -97,7 +97,7 @@ status: pending
 
 OpenClaw 需要把这些来源映射成 session key、agent routing 和 transcript store。只要路由边界错了，后续的 memory、tool、delivery 都可能跟着错。
 
-这也是为什么安全审计文档 `docs/cli/security.md` 会检查 DM scope、开放群组、webhook session override、group allowlist、sandbox/workspace guard 等项目。它不是只审 `exec`，而是在审“真实入口是否把不该共享的上下文混在一起”。
+这也是为什么安全审计文档 `docs/cli/security.md` 会检查 DM scope、开放群组、webhook session override、group allowlist、sandbox/workspace guard 等项目。它审的不只是 `exec`，还有“真实入口是否把不该共享的上下文混在一起”。
 
 ## 3. Workspace / Memory：长期状态扩大了安全半径
 
@@ -117,7 +117,7 @@ CLI agent 的上下文通常跟一次项目会话绑定。OpenClaw 的 workspace
 
 `docs/gateway/sandboxing.md` 把 sandbox 说得很克制：它不是完美安全边界，但能显著限制文件系统和进程访问。OpenClaw 可以把 `exec`、`read`、`write`、`edit`、`apply_patch`、`process` 等工具执行放进 sandbox backend，Gateway 本身仍然在宿主机上。
 
-sandbox 有几个关键维度：
+sandbox 有几个维度：
 
 - `mode`：off、non-main、all；
 - `scope`：agent、session、shared；
@@ -125,13 +125,13 @@ sandbox 有几个关键维度：
 - workspace access：本地 bind/copy、remote-canonical、mirror 等不同模型；
 - browser sandbox：CDP、网络、noVNC 访问也有额外限制。
 
-这里最容易误解的是：sandbox 不是“有了就万事大吉”。文档明确指出，Gateway 不在 sandbox 里；elevated tool 可以绕过 sandbox；如果 sandbox 关闭，工具就在 host 上跑。也就是说 sandbox 是 runtime blast radius 控制，不是入口认证、session 隔离、插件边界、投递边界的替代品。
+这里容易误解的是：sandbox 不是“有了就万事大吉”。文档明确指出，Gateway 不在 sandbox 里；elevated tool 可以绕过 sandbox；如果 sandbox 关闭，工具就在 host 上跑。也就是说，sandbox 是 runtime blast radius 控制，不能替代入口认证、session 隔离、插件边界和投递边界。
 
 ## 5. Exec approvals：当 sandbox 需要逃逸到真实宿主机
 
-OpenClaw 还需要处理更现实的情况：有些命令必须在 gateway host 或 node host 上执行。`docs/tools/exec-approvals.md` 把 exec approvals 定义成 companion app / node host guardrail：policy、allowlist、可选用户批准三者都同意，命令才能在真实宿主机上跑。
+OpenClaw 还要处理更现实的情况：有些命令必须在 gateway host 或 node host 上执行。`docs/tools/exec-approvals.md` 把 exec approvals 定义成 companion app / node host guardrail：policy、allowlist、可选用户批准三者都同意，命令才能在真实宿主机上跑。
 
-这里的设计点有几个：
+这里有几个设计点：
 
 - approvals 叠加在 tool policy 和 elevated gating 之上；
 - effective policy 取更严格者；
@@ -141,7 +141,7 @@ OpenClaw 还需要处理更现实的情况：有些命令必须在 gateway host 
 - approval 会绑定 cwd、argv、env、可执行路径；
 - 对脚本/解释器文件，还会尽量绑定具体文件，避免批准后文件漂移。
 
-`src/gateway/server-methods/exec-approval.ts` 里可以看到 approval request 会提取 host、nodeId、command、argv、env、cwd、agentId、sessionKey 等上下文，再交给 approval manager。它不是只问“允不允许这条字符串”，而是在绑定一组执行上下文。
+`src/gateway/server-methods/exec-approval.ts` 里可以看到 approval request 会提取 host、nodeId、command、argv、env、cwd、agentId、sessionKey 等上下文，再交给 approval manager。它要判断的不是一条孤立字符串，而是一组执行上下文。
 
 这正是 OpenClaw 比 CLI agent 更复杂的地方：命令可能不是在当前机器、当前 shell、当前用户手里执行，而是被 Gateway、node host、companion app、chat approval、channel reply 等多层机制协调。
 
@@ -169,7 +169,7 @@ OpenClaw 还需要处理更现实的情况：有些命令必须在 gateway host 
 
 ## 8. 安全审计的意义：把 footgun 显性化
 
-`docs/cli/security.md` 里的 `openclaw security audit` 不是“漏洞扫描器”那么简单，更像是个人 runtime 的 footgun 检查器。它会提醒：
+`docs/cli/security.md` 里的 `openclaw security audit` 不是普通意义上的“漏洞扫描器”，更像是个人 runtime 的 footgun 检查器。它会提醒：
 
 - 多 DM sender 是否共享 main session；
 - shared inbox 是否应该启用 secure DM mode；
@@ -184,7 +184,7 @@ OpenClaw 还需要处理更现实的情况：有些命令必须在 gateway host 
 
 ## 小结
 
-本章的保留结论是：**OpenClaw 的安全从 ingress 开始，到 delivery 结束；exec approval 只是其中一环。**
+本章保留一句话：**OpenClaw 的安全从 ingress 开始，到 delivery 结束；exec approval 只是其中一环。**
 
 当 Agent 暴露给真实消息渠道之后，安全不再是“这条 shell 命令能不能跑”，而是“这个外部事件是否被正确认证、正确归属、正确隔离、正确限制、正确执行、正确投递”。这也是整本小书最后要留下的 runtime 视角：OpenClaw 的复杂性不是因为目录多，而是因为它把 Agent 放进了一个会长期存在、会醒来、会记忆、会跨渠道行动的现实环境。
 
