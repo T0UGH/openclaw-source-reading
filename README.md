@@ -24,6 +24,10 @@ OpenClaw 不是另一个只围绕代码仓库运行的 coding agent，也不是 
 
 ```text
 docs/
+  guidebook/                   # 正文入口：17 篇源码阅读文章
+  cards/                       # 每篇文章的写作卡片与源码锚点
+  assets/                      # 后续 imagegen 配图资产
+  AUTOPILOT_STATUS.md          # 12 轮 autopilot 推进状态
   design/
     book-architecture-v0.3.md   # 完整版小书架构设计
     book-design-v0.2.md         # 加入 Memory / Heartbeat / Cron 的设计版
@@ -56,6 +60,5 @@ docs/
 
 ## 重要边界
 
-- 不把 OpenClaw 与 Pi 建立关系。
-- 不使用“Pi 宿主化 / SDK integration / 嵌入 Pi agent loop”叙事。
+- 从 OpenClaw 自身架构出发，不引入无关项目叙事。
 - 面向已经了解 Claude Code / Codex / 一般 coding agent 的读者，但不让 Claude Code 框架主导 OpenClaw 的解释。
