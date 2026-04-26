@@ -60,6 +60,14 @@ asset_target: docs/assets/04-session-routing-imagegen.png
 status: pending
 -->
 
+## 源码锚点
+
+- `~/workspace/openclaw/docs/concepts/session.md`：session routing、DM/group/room/cron/webhook 的隔离策略。
+- `~/workspace/openclaw/src/routing/session-key.ts`：`sessionKey` 的构造、thread 维度和请求/存储侧标准化。
+- `~/workspace/openclaw/src/config/sessions/paths.ts`：session store 与 transcript 路径规则。
+- `~/workspace/openclaw/src/gateway/server-session-key.ts`：Gateway 侧 session key 解析与路由入口。
+
+
 ## 第一层：路由策略来自真实通信关系
 
 `docs/concepts/session.md` 先给了一个表：Direct messages 默认共享 session，group chats 按 group 隔离，rooms/channels 按 room 隔离，cron jobs 每次 fresh session，webhooks 按 hook 隔离。

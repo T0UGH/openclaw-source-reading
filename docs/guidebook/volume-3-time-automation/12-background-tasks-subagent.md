@@ -42,7 +42,7 @@ Background Tasks 不是调度器，也不是新的 Agent 类型。它是 OpenCla
 - `src/tasks/task-flow-registry.ts`：Task Flow registry。
 - `src/tasks/detached-task-runtime-contract.ts`：detached task runtime 合约。
 - `src/plugins/runtime/runtime-tasks.ts`：plugin/runtime 层暴露 tasks 能力。
-- `src/commands/tasks.ts`：`openclaw tasks` CLI 入口。
+- `src/commands/tasks.ts`：openclaw tasks CLI 入口。
 - `src/cron/isolated-agent/run.ts`：isolated cron run 如何进入 agent turn、delivery trace、session 与 skills snapshot。
 
 ## 先看机制图

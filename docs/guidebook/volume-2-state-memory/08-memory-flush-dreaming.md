@@ -42,7 +42,7 @@ OpenClaw 把“上下文快塞满了”这件事，拆成两个不同问题：
 - `docs/concepts/dreaming.md`：Dreaming 的 phase model、Dream Diary、ranking signals、scheduling、CLI。
 - `src/auto-reply/reply/memory-flush.ts`：flush / preflight compaction 的 token gate、重复 flush 去重、context hash。
 - `src/auto-reply/reply/agent-runner-memory.ts`：reply runner 中 memory flush 与 compaction 如何接入。
-- `src/plugins/memory-state.ts`：`MemoryFlushPlan` 与 `flushPlanResolver` 的 plugin capability contract。
+- `src/plugins/memory-state.ts`：MemoryFlushPlan 与 flushPlanResolver 的 plugin capability contract。
 - `src/commands/doctor-cron-dreaming-payload-migration.ts`：dreaming 与 cron/job payload 演进相关的诊断迁移入口。
 
 ## 先看机制图
