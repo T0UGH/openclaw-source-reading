@@ -23,4 +23,4 @@
 9. ✅ Mermaid 与 IMAGEGEN_PLACEHOLDER 验收。
 10. ✅ 源码锚点复核。
 11. ✅ README、目录页、发布入口整理。
-12. ⏳ 最终验证、commit/push、交付摘要。
+12. ✅ 最终验证、commit/push、交付摘要。
